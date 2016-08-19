@@ -1,20 +1,11 @@
 #pragma once
 
-class Callable
-{
-public:
-    virtual ~Callable() {}
-    virtual void operator()(int) = 0;
-};
-
 class ServerSocket
 {
 public:
-    ServerSocket();
-
-    bool bind();
+    bool bind(int port);
     bool listen();
-    void accept(Callable&& c);
+    int accept();
 
 private:
     int sockfd_;

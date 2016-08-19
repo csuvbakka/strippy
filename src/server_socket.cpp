@@ -1,15 +1,12 @@
 #include <server_socket.h>
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+
+#include <iostream>
+#include <string>
 
 namespace
 {
@@ -24,11 +21,7 @@ void* get_in_addr(struct sockaddr* sa)
 }
 }
 
-ServerSocket::ServerSocket()
-{
-}
-
-bool ServerSocket::bind()
+bool ServerSocket::bind(int port)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof hints);
@@ -38,8 +31,8 @@ bool ServerSocket::bind()
 
     struct addrinfo* servinfo;
     int rv;
-    const char* service = "4999";
-    if ((rv = getaddrinfo(NULL, service, &hints, &servinfo)) != 0)
+    if ((rv = getaddrinfo(NULL, std::to_string(port).c_str(), &hints,
+                          &servinfo)) != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return false;
@@ -89,6 +82,7 @@ bool ServerSocket::bind()
 
 bool ServerSocket::listen()
 {
+    std::cout << "Listening\n";
     // how many pending connections queue will hold
     static const int backlog = 10;
     if (::listen(sockfd_, backlog) == -1)
@@ -100,31 +94,20 @@ bool ServerSocket::listen()
     return true;
 }
 
-void ServerSocket::accept(Callable&& child_thread)
+int ServerSocket::accept()
 {
-    socklen_t sin_size;
-    struct sockaddr_storage their_addr; // connector's address information
-    int new_fd;
     char s[INET6_ADDRSTRLEN];
-    while (1)
-    { // main accept() loop
-        sin_size = sizeof their_addr;
-        new_fd = ::accept(sockfd_, (struct sockaddr*)&their_addr, &sin_size);
-        if (new_fd == -1)
-        {
-            perror("accept");
-            continue;
-        }
-
+    struct sockaddr_storage their_addr; // connector's address information
+    socklen_t sin_size = sizeof their_addr;
+    int new_fd = ::accept(sockfd_, (struct sockaddr*)&their_addr, &sin_size);
+    if (new_fd != -1)
+    {
         inet_ntop(their_addr.ss_family,
                   get_in_addr((struct sockaddr*)&their_addr), s, sizeof s);
         printf("server: got connection from %s\n", s);
-
-        if (!fork())
-        {                   // this is the child process
-            close(sockfd_); // child doesn't need the listener
-            child_thread(new_fd);
-        }
-        close(new_fd); // parent doesn't need this
     }
+    else
+        perror("accept");
+
+    return new_fd;
 }
