@@ -1,5 +1,6 @@
 #include <server.h>
-#include <sys/socket.h>
+#include <socket_functions.h>
+// #include <sys/socket.h>
 #include <unistd.h>
 
 #include <utility>
@@ -10,8 +11,9 @@ struct ChildThread
 {
     void operator()(int client_fd)
     {
-        if (send(client_fd, "Hello, world!", 13, 0) == -1)
-            return;
+        send(client_fd, "Hello bello");
+        send(client_fd, 1337);
+        send(client_fd, std::string("almafa"));
 
         close(client_fd);
     }
