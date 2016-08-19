@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <string>
 #include <cstring>
+#include <tuple>
 
 template <typename T> std::size_t send(int socket_fd, const T& message)
 {
@@ -19,4 +20,13 @@ template <typename T> std::size_t send(int socket_fd, const T* message);
 template <> std::size_t send(int socket_fd, const char* message)
 {
     return ::send(socket_fd, message, strlen(message), 0);
+}
+
+std::tuple<std::size_t, std::string> recv(int socket_fd)
+{
+    char buf[1024];
+    std::size_t bytes = ::recv(socket_fd, buf, 1024, 0);
+    std::string message(buf);
+
+    return std::make_tuple(bytes, message);
 }
