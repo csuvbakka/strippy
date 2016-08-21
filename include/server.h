@@ -1,7 +1,9 @@
 #pragma once
 
 #include "server_socket.h"
-#include <future>
+// #include <future>
+#include <thread>
+#include <iostream>
 
 template <typename ChildThread> class Server
 {
@@ -16,7 +18,10 @@ public:
         {
             int client_fd = socket_.accept();
             if (client_fd != -1)
-                std::async(std::launch::async, child_thread_, client_fd);
+                std::thread([this, client_fd]()
+                            {
+                                child_thread_(client_fd);
+                            }).detach();
         }
     }
 
