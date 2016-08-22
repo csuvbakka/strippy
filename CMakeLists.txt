@@ -13,7 +13,7 @@ include_directories(include)
 add_executable(proxy main.cpp)
 
 file(GLOB SOURCES "src/*.cpp")
-file(GLOB HEADERS "src/*.h")
+file(GLOB HEADERS "src/*.hpp")
 add_library(socket ${SOURCES} ${HEADERS})
 target_link_libraries(proxy socket)
 target_link_libraries(proxy pthread)

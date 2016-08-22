@@ -1,7 +1,7 @@
-#include <server.h>
-#include <socket_functions.h>
-#include <unistd.h>
+#include <server.hpp>
+#include <socket_functions.hpp>
 
+#include <unistd.h>
 #include <utility>
 #include <functional>
 #include <iostream>
@@ -11,46 +11,36 @@
 #include <iterator>
 #include <experimental/optional>
 
-#include <http.h>
-#include <timer.h>
-
-namespace
-{
-bool ends_with(const std::string& value, const std::string& ending)
-{
-    if (ending.size() > value.size())
-        return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
-std::experimental::optional<HttpRequest> receive_HTTP(int client_fd)
-{
-    std::string message = {};
-    Timer timer(5000);
-    do
-    {
-        message += recv(client_fd);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        timer.reset();
-    } while (!ends_with(message, "\r\n\r\n") && !timer.is_timed_out());
-
-    if (timer.is_timed_out())
-        return {};
-    else
-        return HttpRequest(message);
-}
-}
+#include <http_request.hpp>
+#include <http_response.hpp>
+#include <timer.hpp>
+#include <client_socket.hpp>
+#include <string_utils.hpp>
+#include <http_helpers.hpp>
 
 struct ChildThread
 {
     void operator()(int client_fd)
     {
-        auto message = receive_HTTP(client_fd);
+        auto message = http::receive_request(client_fd);
         if (message)
         {
             std::cout << message->request_line() << std::endl;
             std::cout << (*message)["Host"] << std::endl;
             std::cout << (*message)["User-Agent"] << std::endl;
+            ClientSocket client;
+            if (!client.connect((*message)["Host"], 80))
+                std::cout << "failed to connect" << std::endl;
+            std::cout << "sending " << message->data() << std::endl;
+            auto sent = util::socket::send(client.sockfd_, message->data());
+            std::cout << "sent bytes: " << sent << std::endl;
+            auto response = http::receive_response(client.sockfd_);
+            std::cout << "waiting for response" << std::endl;
+            if (response)
+            {
+                std::cout << "response: " << std::endl;
+                // std::cout << response->data() << std::endl;
+            }
         }
 
         // send(client_fd, "Content-Type: text/plain\r\n");
