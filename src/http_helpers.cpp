@@ -11,20 +11,19 @@ namespace http
 {
 std::experimental::optional<http::Request> receive_request(int client_fd)
 {
-    std::string message = {};
     Timer timer(5000);
+    http::Request request;
     do
     {
-        message += util::socket::recv_no_wait(client_fd);
+        request >> util::socket::recv_no_wait(client_fd);
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         timer.reset();
-    } while (!util::string::ends_with(message, "\r\n\r\n") &&
-             !timer.is_timed_out());
+    } while (!request.done_parsing() && !timer.is_timed_out());
 
     if (timer.is_timed_out())
         return {};
     else
-        return http::Request(message);
+        return request;
 }
 
 // std::experimental::optional<http::Response> receive_response(int client_fd)

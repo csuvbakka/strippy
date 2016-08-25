@@ -28,19 +28,19 @@ struct ChildThread
             std::cout << message->request_line() << std::endl;
             std::cout << (*message)["Host"] << std::endl;
             std::cout << (*message)["User-Agent"] << std::endl;
-            ClientSocket client;
-            if (!client.connect((*message)["Host"], 80))
-                std::cout << "failed to connect" << std::endl;
-            std::cout << "sending " << message->data() << std::endl;
-            auto sent = util::socket::send(client.sockfd_, message->data());
-            std::cout << "sent bytes: " << sent << std::endl;
-            auto response = http::receive_response(client.sockfd_);
-            std::cout << "waiting for response" << std::endl;
-            if (response)
-            {
-                std::cout << "response: " << std::endl;
-                // std::cout << response->data() << std::endl;
-            }
+            // ClientSocket client;
+            // if (!client.connect((*message)["Host"], 80))
+            // std::cout << "failed to connect" << std::endl;
+            // std::cout << "sending " << message->data() << std::endl;
+            // auto sent = util::socket::send(client.sockfd_, message->data());
+            // std::cout << "sent bytes: " << sent << std::endl;
+            // auto response = http::receive_response(client.sockfd_);
+            // std::cout << "waiting for response" << std::endl;
+            // if (response)
+            // {
+            // std::cout << "response: " << std::endl;
+            // // std::cout << response->data() << std::endl;
+            // }
         }
 
         // send(client_fd, "Content-Type: text/plain\r\n");

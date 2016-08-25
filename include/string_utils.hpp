@@ -12,6 +12,8 @@ namespace string
 bool starts_with(const std::string& str, const std::string& prefix);
 bool ends_with(const std::string& value, const std::string& ending);
 
+std::string join(const std::vector<std::string>& strings,
+                 const std::string& delim);
 void split(const std::string& s, char delim, std::vector<std::string>& elems);
 std::vector<std::string> split(const std::string& s, char delim);
 std::tuple<std::string, std::string> split_first(const std::string& s,

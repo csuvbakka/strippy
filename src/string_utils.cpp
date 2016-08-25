@@ -16,6 +16,16 @@ bool ends_with(const std::string& value, const std::string& ending)
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
+std::string join(const std::vector<std::string>& strings,
+                 const std::string& delim)
+{
+    std::string joined;
+    for (const auto& s : strings)
+        joined += s + delim;
+
+    return joined;
+}
+
 void split(const std::string& s, char delim, std::vector<std::string>& elems)
 {
     std::stringstream ss(s);
