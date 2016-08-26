@@ -5,31 +5,17 @@
 
 namespace
 {
-std::string strip_cr(const std::string& str)
+void strip_cr(std::string& str)
 {
     if (!str.empty())
-        if (str[str.size() - 1] == '\r')
-            return str.substr(0, str.size() - 1);
-
-    return str;
+        if (str.back() == '\r')
+            str.pop_back();
 }
-std::vector<std::string> strip_cr(const std::vector<std::string>& strings)
+void strip_cr(std::vector<std::string>& strings)
 {
     if (!strings.empty())
-    {
-        std::vector<std::string> output;
-        output.reserve(strings.size());
-
-        for (const auto& str : strings)
-            if (str[str.size() - 1] == '\r')
-                output.push_back(str.substr(0, str.size() - 1));
-            else
-                output.push_back(str);
-
-        return output;
-    }
-
-    return strings;
+        for (auto& str : strings)
+            strip_cr(str);
 }
 }
 
@@ -84,9 +70,10 @@ void Request::process_buffer()
 
     if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
     {
-        auto lines = strip_cr(util::string::split(buffer_, '\n'));
+        auto lines = util::string::split(buffer_, '\n');
         if (lines.size() > 1)
         {
+            strip_cr(lines);
             request_line_ = lines[0];
             lines.erase(lines.begin());
             buffer_ = util::string::join(lines, "\r\n");
@@ -98,12 +85,21 @@ void Request::process_buffer()
     {
         using namespace util::string;
         std::string header, header_data;
-        auto lines = strip_cr(split(buffer_, '\n'));
+        auto pos = buffer_.find_last_of('\n');
+        if (pos == std::string::npos)
+            return;
+        auto to_process = buffer_.substr(0, pos);
+
+        if (buffer_.size() > pos)
+            buffer_ = buffer_.substr(pos);
+
+        auto lines = split(to_process, '\n');
+        strip_cr(lines);
         for (const auto& line : lines)
         {
-            if (line.empty())
-                parse_state_ = ParseState::DONE;
-            else
+            // if (line.empty())
+            // parse_state_ = ParseState::DONE;
+            // else
             {
                 std::tie(header, header_data) = split_first(line, ':');
                 if (!header.empty() && !header_data.empty())

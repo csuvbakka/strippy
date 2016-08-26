@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
-set(GTEST_ROOT "~/git/googletest/googletest")
+set(GTEST_ROOT "${PROJECT_SOURCE_DIR}/../googletest/googletest")
 # set(TEST_LIB "libgtest.a")
 # set(MOCK_LIB "libgmock.a")
 
