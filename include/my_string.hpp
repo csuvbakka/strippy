@@ -1,59 +1,76 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cstring>
-#include <vector>
+#include <memory>
+#include <iterator>
+#include <tuple>
 
 #include <iostream>
 
 namespace mystr
 {
-template <typename T> class MyString
-{
-    // friend class MySubString<T>;
+using buffer_type = std::array<char, 8192>;
 
+class MyString
+{
 public:
-    using const_iterator = typename std::vector<T>::const_iterator;
-    MyString(const char* str)
+    using iterator = typename buffer_type::iterator;
+    using const_iterator = typename buffer_type::const_iterator;
+
+    MyString(buffer_type& buffer, const char* str)
+        : begin_(buffer.begin())
+        , end_(buffer.begin())
     {
-        buffer_.reserve(strlen(str));
-        for (auto i = 0; i < strlen(str); ++i)
-            buffer_.push_back(str[i]);
+        auto str_length = std::strlen(str);
+        std::memcpy(buffer.data(), str, str_length);
+        std::advance(end_, str_length);
+    }
+    MyString(buffer_type& buffer, const std::string& str)
+        : begin_(buffer.begin())
+        , end_(buffer.begin())
+    {
+        std::copy(str.begin(), str.end(), buffer.data());
+        std::advance(end_, str.length());
+    }
+    MyString(const MyString& other)
+        : begin_(other.begin_)
+        , end_(other.end_)
+    {
+    }
+    MyString(MyString&& other)
+        : begin_(std::move(other.begin_))
+        , end_(std::move(other.end_))
+    {
     }
 
-    const_iterator begin() const { return buffer_.begin(); }
-    const_iterator end() const { return buffer_.end(); }
-
-    std::string str() { return std::string(buffer_.begin(), buffer_.end()); }
-    std::string str(const_iterator begin) const
+    // TODO: make this operator+= and check bounds
+    void append(const std::string& str)
     {
-        return std::string(begin, buffer_.end());
+        for (const auto& c : str)
+            *end_++ = c;
+    }
+
+    const_iterator cbegin() const { return begin_; }
+    const_iterator cend() const { return end_; }
+
+    std::string str() const { return std::string(begin_, end_); }
+
+    const_iterator find(char c) const { return std::find(begin_, end_, c); }
+    bool starts_with(const char* str)
+    {
+        auto begin = begin_;
+        for (auto i = 0; i < std::strlen(str); ++i, std::advance(begin, 1))
+        {
+            if (str[i] != *begin)
+                return false;
+        }
+        return true;
     }
 
 private:
-    std::vector<T> buffer_;
-};
-
-template <typename C> class MySubString
-{
-    typedef typename MyString<C>::const_iterator MyString_const_iterator;
-
-public:
-    MySubString(const MyString<C>& mystr)
-        : begin_(mystr.begin())
-        , end_(mystr.end())
-    {
-    }
-    MySubString(MyString_const_iterator begin, MyString_const_iterator end)
-        : begin_(begin)
-        , end_(end)
-    {
-    }
-
-    std::string str() { return std::string(begin_, end_); }
-
-private:
-    MyString_const_iterator begin_;
-    MyString_const_iterator end_;
+    iterator begin_;
+    iterator end_;
 };
 }
