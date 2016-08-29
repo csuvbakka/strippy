@@ -18,6 +18,22 @@ TEST(HttpRequestTest, first_line_is_the_request_line)
     EXPECT_EQ(REQUEST_LINE, request.request_line());
 }
 
+TEST(HttpRequestTest, parse_request_line_in_multiple_chunks)
+{
+    http::Request request;
+    std::string request_line_first_half = "GET /path/to/fi";
+    std::string request_line_second_half = "le/index.html HTTP/1.0";
+    request >> request_line_first_half;
+    EXPECT_EQ("", request.request_line());
+
+    request >> request_line_second_half;
+    EXPECT_EQ("", request.request_line());
+
+    request >> CRLF;
+    EXPECT_EQ(request_line_first_half + request_line_second_half,
+              request.request_line());
+}
+
 TEST(HttpRequestTest, parse_one_header)
 {
     http::Request request;
@@ -28,8 +44,9 @@ TEST(HttpRequestTest, parse_one_header)
     EXPECT_EQ(host_data, request[HOST]);
 
     http::Request request_full;
-    request_full >> REQUEST_LINE + CRLF + host_header + CRLF;
+    request_full >> REQUEST_LINE + "\n" + host_header + CRLF;
 
+    EXPECT_EQ(REQUEST_LINE, request_full.request_line());
     EXPECT_EQ(host_data, request_full[HOST]);
 }
 

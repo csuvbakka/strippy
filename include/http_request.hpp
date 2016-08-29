@@ -37,7 +37,9 @@ public:
 
 private:
     void process_buffer();
-    std::string parse_headers_to_process();
+    std::string get_headers_to_process();
+    void add_line_to_multiline_header(const std::string& line,
+                                      const std::string& header);
 
 private:
     std::string data_;

@@ -71,34 +71,29 @@ void Request::process_buffer()
     if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
     {
         auto pos = buffer_.find_first_of('\n');
-        if (pos == std::string::npos)
-            return;
+        if (pos != std::string::npos)
+        {
+            request_line_ = buffer_.substr(0, pos);
+            strip_cr(request_line_);
+            if (buffer_.length() > pos)
+                buffer_ = buffer_.substr(pos + 1);
 
-        request_line_ = buffer_.substr(0, pos);
-        strip_cr(request_line_);
-        if (buffer_.length() > pos)
-            buffer_ = buffer_.substr(pos + 1);
-
-        parse_state_ = ParseState::PARSING_HEADERS;
+            parse_state_ = ParseState::PARSING_HEADERS;
+        }
     }
 
     if (parse_state_ == ParseState::PARSING_HEADERS)
     {
         using namespace util::string;
 
-        auto lines = split(parse_headers_to_process(), '\n');
+        auto lines = split(get_headers_to_process(), '\n');
         strip_cr(lines);
 
         std::string header, header_data;
         for (const auto& line : lines)
         {
-            if (util::string::starts_with_whitespace(line))
-            {
-                auto non_whitespace_pos = line.find_first_not_of("\t ");
-                if (non_whitespace_pos != std::string::npos)
-                    if (!header.empty())
-                        headers_[header] += line.substr(non_whitespace_pos);
-            }
+            if (starts_with_whitespace(line))
+                add_line_to_multiline_header(line, header);
             else
             {
                 std::tie(header, header_data) = split_first(line, ':');
@@ -109,7 +104,7 @@ void Request::process_buffer()
     }
 }
 
-std::string Request::parse_headers_to_process()
+std::string Request::get_headers_to_process()
 {
     auto pos = buffer_.find_last_of('\n');
     if (pos == std::string::npos)
@@ -120,6 +115,15 @@ std::string Request::parse_headers_to_process()
         buffer_ = buffer_.substr(pos);
 
     return to_process;
+}
+
+void Request::add_line_to_multiline_header(const std::string& line,
+                                           const std::string& header)
+{
+    auto non_whitespace_pos = line.find_first_not_of("\t ");
+    if (non_whitespace_pos != std::string::npos)
+        if (!header.empty())
+            headers_[header] += line.substr(non_whitespace_pos);
 }
 
 Request& operator>>(Request& lhs, const std::string& rhs)
