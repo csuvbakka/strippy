@@ -70,45 +70,56 @@ void Request::process_buffer()
 
     if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
     {
-        auto lines = util::string::split(buffer_, '\n');
-        if (lines.size() > 1)
-        {
-            strip_cr(lines);
-            request_line_ = lines[0];
-            lines.erase(lines.begin());
-            buffer_ = util::string::join(lines, "\r\n");
-            parse_state_ = ParseState::PARSING_HEADERS;
-        }
+        auto pos = buffer_.find_first_of('\n');
+        if (pos == std::string::npos)
+            return;
+
+        request_line_ = buffer_.substr(0, pos);
+        strip_cr(request_line_);
+        if (buffer_.length() > pos)
+            buffer_ = buffer_.substr(pos + 1);
+
+        parse_state_ = ParseState::PARSING_HEADERS;
     }
 
     if (parse_state_ == ParseState::PARSING_HEADERS)
     {
         using namespace util::string;
-        std::string header, header_data;
-        auto pos = buffer_.find_last_of('\n');
-        if (pos == std::string::npos)
-            return;
-        auto to_process = buffer_.substr(0, pos);
 
-        if (buffer_.size() > pos)
-            buffer_ = buffer_.substr(pos);
-
-        auto lines = split(to_process, '\n');
+        auto lines = split(parse_headers_to_process(), '\n');
         strip_cr(lines);
+
+        std::string header, header_data;
         for (const auto& line : lines)
         {
-            // if (line.empty())
-            // parse_state_ = ParseState::DONE;
-            // else
+            if (util::string::starts_with_whitespace(line))
+            {
+                auto non_whitespace_pos = line.find_first_not_of("\t ");
+                if (non_whitespace_pos != std::string::npos)
+                    if (!header.empty())
+                        headers_[header] += line.substr(non_whitespace_pos);
+            }
+            else
             {
                 std::tie(header, header_data) = split_first(line, ':');
                 if (!header.empty() && !header_data.empty())
-                {
-                    headers_[trim(header)] = trim(header_data);
-                }
+                    headers_[header] = trim(header_data);
             }
         }
     }
+}
+
+std::string Request::parse_headers_to_process()
+{
+    auto pos = buffer_.find_last_of('\n');
+    if (pos == std::string::npos)
+        return {};
+    auto to_process = buffer_.substr(0, pos);
+
+    if (buffer_.size() > pos)
+        buffer_ = buffer_.substr(pos);
+
+    return to_process;
 }
 
 Request& operator>>(Request& lhs, const std::string& rhs)

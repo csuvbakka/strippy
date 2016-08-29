@@ -27,10 +27,10 @@ TEST(HttpRequestTest, parse_one_header)
 
     EXPECT_EQ(host_data, request[HOST]);
 
-    http::Request request_2;
-    request_2 >> REQUEST_LINE + CRLF + host_header + CRLF;
+    http::Request request_full;
+    request_full >> REQUEST_LINE + CRLF + host_header + CRLF;
 
-    EXPECT_EQ(host_data, request_2[HOST]);
+    EXPECT_EQ(host_data, request_full[HOST]);
 }
 
 TEST(HttpRequestTest, parse_two_headers)
@@ -47,32 +47,97 @@ TEST(HttpRequestTest, parse_two_headers)
     EXPECT_EQ(host_data, request[HOST]);
     EXPECT_EQ(referer_data, request[REFERER]);
 
-    http::Request request_2;
-    request_2 >>
+    http::Request request_full;
+    request_full >>
         (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF);
 
-    EXPECT_EQ(host_data, request_2["Host"]);
-    EXPECT_EQ(referer_data, request_2[REFERER]);
+    EXPECT_EQ(host_data, request_full[HOST]);
+    EXPECT_EQ(referer_data, request_full[REFERER]);
 }
 
-TEST(HttpRequestTest, parse_two_headers_2)
+TEST(HttpRequestTest, parse_two_headers_small_chunks)
 {
     http::Request request;
-    std::string host_header_string = "Host";
     std::string host_data = "127.0.0.1";
-    std::string host_header = host_header_string + ": " + host_data;
+    std::string host_header = HOST + ": " + host_data;
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
-    request >> REQUEST_LINE >> CRLF >> host_header >> CRLF >> referer_header;
 
+    request >> REQUEST_LINE >> CRLF >> host_header;
+    EXPECT_EQ("", request[HOST]);
+
+    request >> CRLF;
     EXPECT_EQ(host_data, request[HOST]);
+
+    request >> referer_header;
     EXPECT_EQ("", request[REFERER]);
 
-    http::Request request_2;
-    request_2 >>
-        (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF);
+    request >> CRLF;
+    EXPECT_EQ(referer_data, request[REFERER]);
+}
 
-    EXPECT_EQ(host_data, request_2[HOST]);
-    EXPECT_EQ(referer_data, request_2[REFERER]);
+TEST(HttpRequestTest, any_number_of_spaces_between_colon_and_value)
+{
+    http::Request request;
+    std::string host_data = "127.0.0.1";
+    std::string host_header = HOST + ":   " + host_data;
+
+    std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
+    std::string referer_header = REFERER + ":           " + referer_data;
+
+    request >> REQUEST_LINE >> CRLF >> host_header;
+    EXPECT_EQ("", request[HOST]);
+
+    request >> CRLF;
+    EXPECT_EQ(host_data, request[HOST]);
+
+    request >> referer_header;
+    EXPECT_EQ("", request[REFERER]);
+
+    request >> CRLF;
+    EXPECT_EQ(referer_data, request[REFERER]);
+}
+
+TEST(HttpRequestTest,
+     header_lines_starting_with_whitespace_are_part_of_the_previous_header_line)
+{
+
+    std::string referer_data_first_line =
+        "http://en.wikipedia.org/wiki/Main_Page";
+    std::string referer_data_second_line = "/wow/this/is/a/long/referer";
+
+    {
+        http::Request request;
+        std::string separator = "\t";
+        std::string referer_header = REFERER + ":" + referer_data_first_line +
+                                     CRLF + separator +
+                                     referer_data_second_line + CRLF;
+
+        request >> REQUEST_LINE >> CRLF >> referer_header >> CRLF;
+        EXPECT_EQ(referer_data_first_line + referer_data_second_line,
+                  request[REFERER]);
+    }
+    {
+        http::Request request;
+        std::string separator = " ";
+        std::string referer_header = REFERER + ":" + referer_data_first_line +
+                                     CRLF + separator +
+                                     referer_data_second_line + CRLF;
+
+        request >> REQUEST_LINE >> CRLF >> referer_header >> CRLF;
+        EXPECT_EQ(referer_data_first_line + referer_data_second_line,
+                  request[REFERER]);
+    }
+    {
+        http::Request request;
+        std::string separator = "      ";
+        std::string referer_header = REFERER + ":" + referer_data_first_line +
+                                     CRLF + separator +
+                                     referer_data_second_line + CRLF;
+
+        request >> REQUEST_LINE >> CRLF >> referer_header >> CRLF;
+        EXPECT_EQ(referer_data_first_line + referer_data_second_line,
+                  request[REFERER]);
+    }
 }

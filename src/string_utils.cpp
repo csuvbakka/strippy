@@ -4,9 +4,18 @@ namespace util
 {
 namespace string
 {
+bool starts_with(const std::string& str, char c)
+{
+    return str.front() == c;
+}
 bool starts_with(const std::string& str, const std::string& prefix)
 {
     return std::equal(prefix.begin(), prefix.end(), str.begin());
+}
+
+bool starts_with_whitespace(const std::string& str)
+{
+    return starts_with(str, ' ') || starts_with(str, '\t');
 }
 
 bool ends_with(const std::string& value, const std::string& ending)

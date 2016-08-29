@@ -37,6 +37,7 @@ public:
 
 private:
     void process_buffer();
+    std::string parse_headers_to_process();
 
 private:
     std::string data_;

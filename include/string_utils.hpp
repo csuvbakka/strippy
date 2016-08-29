@@ -9,7 +9,9 @@ namespace util
 {
 namespace string
 {
+bool starts_with(const std::string& str, char c);
 bool starts_with(const std::string& str, const std::string& prefix);
+bool starts_with_whitespace(const std::string& str);
 bool ends_with(const std::string& value, const std::string& ending);
 
 std::string join(const std::vector<std::string>& strings,
