@@ -16,6 +16,8 @@ bool ends_with(const std::string& value, const std::string& ending);
 
 void erase_head(std::string& str, char prefix);
 void erase_head(std::string& str, const std::string& prefix);
+void erase_head_all(std::string& str, char prefix);
+void erase_head_all(std::string& str, const std::string& prefix);
 
 std::string join(const std::vector<std::string>& strings,
                  const std::string& delim);

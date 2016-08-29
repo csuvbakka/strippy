@@ -35,6 +35,16 @@ void erase_head(std::string& str, const std::string& prefix)
     if (starts_with(str, prefix))
         str.erase(0, prefix.length());
 }
+void erase_head_all(std::string& str, char prefix)
+{
+    while (starts_with(str, prefix))
+        str.erase(0, 1);
+}
+void erase_head_all(std::string& str, const std::string& prefix)
+{
+    while (starts_with(str, prefix))
+        str.erase(0, prefix.length());
+}
 
 std::string join(const std::vector<std::string>& strings,
                  const std::string& delim)

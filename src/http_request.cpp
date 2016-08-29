@@ -66,49 +66,49 @@ std::string Request::operator[](const std::string& header_string)
 void Request::process_buffer()
 {
     if (parse_state_ == ParseState::NOT_STARTED)
-        parse_state_ = ParseState::PARSING_REQUEST_LINE;
-
-    // [Postcondition] buffer_ will start with the first character
-    // after the newline character that ends the request line
-    if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
     {
-        util::string::erase_head(buffer_, '\n');
-        util::string::erase_head(buffer_, "\r\n"); // RFC2616 - 4.1
-
-        auto pos = buffer_.find_first_of('\n');
-        if (pos != std::string::npos)
-        {
-            request_line_ = buffer_.substr(0, pos);
-            strip_cr(request_line_);
-            if (buffer_.length() > pos)
-                buffer_ = buffer_.substr(pos + 1);
-
-            parse_state_ = ParseState::PARSING_HEADERS;
-        }
+        util::string::erase_head_all(buffer_, '\n');
+        util::string::erase_head_all(buffer_, "\r\n"); // RFC2616 - 4.1
+        parse_state_ = ParseState::PARSING_REQUEST_LINE;
     }
 
-    if (parse_state_ == ParseState::PARSING_HEADERS)
+    std::string header;
+    std::size_t first_nl_pos;
+    do
     {
-        using namespace util::string;
+        first_nl_pos = buffer_.find_first_of('\n');
+        if (first_nl_pos == std::string::npos)
+            return;
 
-        auto lines = split(get_headers_to_process(), '\n');
-        strip_cr(lines);
+        std::string line = buffer_.substr(0, first_nl_pos);
+        strip_cr(line);
+        if (buffer_.length() > first_nl_pos)
+            buffer_.erase(0, first_nl_pos + 1);
+        else
+            buffer_.erase(0, first_nl_pos);
 
-        std::string header, header_data;
-        for (const auto& line : lines)
+        if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
         {
+            request_line_ = line;
+            parse_state_ = ParseState::PARSING_HEADERS;
+        }
+        else if (parse_state_ == ParseState::PARSING_HEADERS)
+        {
+            using namespace util::string;
+
             if (line.empty())
                 parse_state_ = ParseState::DONE;
             else if (starts_with_whitespace(line))
                 add_line_to_multiline_header(line, header);
             else
             {
+                std::string header_data;
                 std::tie(header, header_data) = split_first(line, ':');
                 if (!header.empty() && !header_data.empty())
                     headers_[header] = trim(header_data);
             }
         }
-    }
+    } while (!buffer_.empty());
 }
 
 // [Invariant] buffer_ will start with the first character after
