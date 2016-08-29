@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 project (strippy)
 
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++1z -Wall -g --coverage")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++1z -Wall -g -fno-limit-debug-info --coverage")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++1z -Wall -O3")
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
