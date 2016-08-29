@@ -68,6 +68,8 @@ void Request::process_buffer()
     if (parse_state_ == ParseState::NOT_STARTED)
         parse_state_ = ParseState::PARSING_REQUEST_LINE;
 
+    // [Postcondition] buffer_ will start with the first character
+    // after the newline character that ends the request line
     if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
     {
         auto pos = buffer_.find_first_of('\n');
@@ -92,7 +94,9 @@ void Request::process_buffer()
         std::string header, header_data;
         for (const auto& line : lines)
         {
-            if (starts_with_whitespace(line))
+            if (line.empty())
+                parse_state_ = ParseState::DONE;
+            else if (starts_with_whitespace(line))
                 add_line_to_multiline_header(line, header);
             else
             {
@@ -104,15 +108,20 @@ void Request::process_buffer()
     }
 }
 
+// [Invariant] buffer_ will start with the first character after
+// the line ending newline character if any
 std::string Request::get_headers_to_process()
 {
     auto pos = buffer_.find_last_of('\n');
     if (pos == std::string::npos)
         return {};
+
     auto to_process = buffer_.substr(0, pos);
 
-    if (buffer_.size() > pos)
-        buffer_ = buffer_.substr(pos);
+    if (buffer_.length() > pos)
+        buffer_ = buffer_.substr(pos + 1);
+    else
+        buffer_ = {};
 
     return to_process;
 }
