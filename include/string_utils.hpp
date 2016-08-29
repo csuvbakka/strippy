@@ -14,6 +14,9 @@ bool starts_with(const std::string& str, const std::string& prefix);
 bool starts_with_whitespace(const std::string& str);
 bool ends_with(const std::string& value, const std::string& ending);
 
+void remove_leading(std::string& str, char prefix);
+void remove_leading(std::string& str, const std::string& prefix);
+
 std::string join(const std::vector<std::string>& strings,
                  const std::string& delim);
 void split(const std::string& s, char delim, std::vector<std::string>& elems);

@@ -25,6 +25,17 @@ bool ends_with(const std::string& value, const std::string& ending)
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
+void remove_leading(std::string& str, char prefix)
+{
+    if (starts_with(str, prefix))
+        str.erase(0, 1);
+}
+void remove_leading(std::string& str, const std::string& prefix)
+{
+    if (starts_with(str, prefix))
+        str.erase(0, prefix.length());
+}
+
 std::string join(const std::vector<std::string>& strings,
                  const std::string& delim)
 {

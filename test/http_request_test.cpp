@@ -93,6 +93,17 @@ TEST(HttpRequestTest, parse_request_line_in_multiple_chunks)
     EXPECT_EQ(builder.data(), request.request_line());
 }
 
+TEST(HttpRequestTest, ignore_empty_lines_before_request_line)
+{
+    http::Request request;
+    RequestStringBuilder builder;
+    builder.request_line(REQUEST_LINE);
+
+    request >> CRLF + builder.build();
+
+    EXPECT_EQ(builder.get_request_line(), request.request_line());
+}
+
 TEST(HttpRequestTest, parse_one_header)
 {
     http::Request request;

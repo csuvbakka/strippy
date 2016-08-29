@@ -72,6 +72,9 @@ void Request::process_buffer()
     // after the newline character that ends the request line
     if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
     {
+        util::string::remove_leading(buffer_, '\n');
+        util::string::remove_leading(buffer_, "\r\n"); // RFC2616 - 4.1
+
         auto pos = buffer_.find_first_of('\n');
         if (pos != std::string::npos)
         {
