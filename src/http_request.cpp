@@ -73,19 +73,15 @@ void Request::process_buffer()
     }
 
     std::string header;
-    std::size_t first_nl_pos;
     do
     {
-        first_nl_pos = buffer_.find_first_of('\n');
+        auto first_nl_pos = buffer_.find_first_of('\n');
         if (first_nl_pos == std::string::npos)
             return;
 
         std::string line = buffer_.substr(0, first_nl_pos);
         strip_cr(line);
-        if (buffer_.length() > first_nl_pos)
-            buffer_.erase(0, first_nl_pos + 1);
-        else
-            buffer_.erase(0, first_nl_pos);
+        buffer_.erase(0, first_nl_pos + 1);
 
         if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
         {
