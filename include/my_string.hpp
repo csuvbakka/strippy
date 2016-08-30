@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <exception>
 #include <memory>
 #include <iterator>
 #include <tuple>
@@ -19,37 +20,30 @@ public:
     using iterator = typename buffer_type::iterator;
     using const_iterator = typename buffer_type::const_iterator;
 
-    MyString(buffer_type& buffer, const char* str)
-        : begin_(buffer.begin())
+    MyString(buffer_type& buffer)
+        : buffer_(buffer)
+        , begin_(buffer.begin())
         , end_(buffer.begin())
     {
-        auto str_length = std::strlen(str);
-        std::memcpy(buffer.data(), str, str_length);
-        std::advance(end_, str_length);
     }
-    MyString(buffer_type& buffer, const std::string& str)
-        : begin_(buffer.begin())
-        , end_(buffer.begin())
+    MyString(const buffer_type& buffer, const_iterator begin,
+             const_iterator end)
+        : buffer_(buffer)
+        , begin_(begin)
+        , end_(end)
     {
-        std::copy(str.begin(), str.end(), buffer.data());
-        std::advance(end_, str.length());
     }
     MyString(const MyString& other)
-        : begin_(other.begin_)
+        : buffer_(other.buffer_)
+        , begin_(other.begin_)
         , end_(other.end_)
     {
     }
     MyString(MyString&& other)
-        : begin_(std::move(other.begin_))
+        : buffer_(other.buffer_)
+        , begin_(std::move(other.begin_))
         , end_(std::move(other.end_))
     {
-    }
-
-    // TODO: make this operator+= and check bounds
-    void append(const std::string& str)
-    {
-        for (const auto& c : str)
-            *end_++ = c;
     }
 
     const_iterator cbegin() const { return begin_; }
@@ -69,8 +63,32 @@ public:
         return true;
     }
 
+    void pop_front()
+    {
+        if (end_ != begin_)
+            std::advance(begin_, 1);
+    }
+    void pop_back()
+    {
+        if (end_ != begin_)
+            std::advance(end_, -1);
+    }
+
+    std::size_t length() const { return std::distance(begin_, end_); }
+
+    MyString substr(std::size_t pos)
+    {
+        if (length() < pos)
+            throw std::out_of_range{"MyString substr"};
+        else if (length() == pos)
+            return MyString{buffer_, begin_, begin_};
+        else
+            return MyString{buffer_, std::next(begin_, pos), end_};
+    }
+
 private:
-    iterator begin_;
-    iterator end_;
+    const buffer_type& buffer_;
+    const_iterator begin_;
+    const_iterator end_;
 };
 }
