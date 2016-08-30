@@ -142,6 +142,26 @@ TEST(MyString, find_first_not_empty_string_finds_end)
     EXPECT_EQ(it, mystring.end());
 }
 
+TEST(MyString, find_first_not_of)
+{
+    auto haystack = new_buffer("abcbccbaXabcab");
+    std::string not_of = "abc";
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_first_not_of(not_of);
+    EXPECT_EQ(*it, 'X');
+}
+
+TEST(MyString, find_first_not_of_all_of_returns_end)
+{
+    auto haystack = new_buffer("abcbccbaabcab");
+    std::string not_of = "abc";
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_first_not_of(not_of);
+    EXPECT_EQ(it, mystring.end());
+}
+
 TEST(MyString, find_last_not)
 {
     auto haystack = new_buffer("aaaxaaxaaa");
@@ -354,4 +374,13 @@ TEST(MyString, rtrim_trims_only_right_side)
     auto mystring = mystring_from_buffer(buffer);
     mystring.rtrim();
     EXPECT_EQ("  alma", mystring.str());
+}
+
+TEST(MyString, trim)
+{
+    auto buffer = new_buffer("   alma    ");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.trim();
+    EXPECT_EQ("alma", mystring.str());
 }

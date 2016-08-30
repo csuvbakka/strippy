@@ -128,6 +128,18 @@ public:
                                 return actual_char != c;
                             });
     }
+    const_iterator find_first_not_of(const std::string& str) const
+    {
+        return std::find_if(begin_, end_, [&str](char actual_char)
+                            {
+                                return std::none_of(
+                                    str.begin(), str.end(),
+                                    [&actual_char](char not_of_char)
+                                    {
+                                        return actual_char == not_of_char;
+                                    });
+                            });
+    }
     const_iterator find_last_not(char c) const
     {
         if (is_empty())
@@ -155,7 +167,7 @@ public:
     }
 
     char front() { return *begin_; }
-    char back() { return *end_; }
+    char back() { return *std::next(end_, -1); }
 
     void pop_front()
     {
@@ -207,6 +219,12 @@ public:
             end_ = std::next(it);
     }
 
+    void trim()
+    {
+        ltrim();
+        rtrim();
+    }
+
 private:
     const MyStringBuffer& buffer_;
     const_iterator begin_;
@@ -214,4 +232,6 @@ private:
 };
 
 MyString ltrim_copy(const MyString& str);
+MyString rtrim_copy(const MyString& str);
+MyString trim_copy(const MyString& str);
 }
