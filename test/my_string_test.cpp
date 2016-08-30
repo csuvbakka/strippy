@@ -51,6 +51,41 @@ TEST(MyStringBuffer, clear)
     EXPECT_EQ("", buffer.str());
 }
 
+TEST(MyStringBuffer, starts_with)
+{
+    mystr::MyStringBuffer buffer;
+
+    buffer += "alma";
+    EXPECT_EQ("alma", buffer.str());
+
+    EXPECT_TRUE(buffer.starts_with("a"));
+    EXPECT_TRUE(buffer.starts_with("al"));
+    EXPECT_TRUE(buffer.starts_with("alm"));
+    EXPECT_TRUE(buffer.starts_with("alma"));
+
+    EXPECT_FALSE(buffer.starts_with("banan"));
+}
+
+TEST(MyStringBuffer, find_first_of)
+{
+    mystr::MyStringBuffer buffer;
+
+    buffer += "alma";
+
+    auto it = buffer.find_first_of('m');
+    EXPECT_EQ(*it, 'm');
+}
+
+TEST(MyStringBuffer, find_first_of_not_found_return_end_iterator)
+{
+    mystr::MyStringBuffer buffer;
+
+    buffer += "alma";
+
+    auto it = buffer.find_first_of('x');
+    EXPECT_EQ(it, buffer.end());
+}
+
 TEST(MyString, constructor)
 {
     auto buffer = new_buffer("alma");
@@ -74,6 +109,69 @@ TEST(MyString, find_character)
     auto mystring = mystring_from_buffer(haystack);
     auto it = mystring.find(needle);
     EXPECT_EQ(*it, needle);
+}
+
+TEST(MyString, find_first_not)
+{
+    auto haystack = new_buffer("aaaxaaxaaax");
+    char needle = 'a';
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_first_not(needle);
+    EXPECT_EQ(*it, 'x');
+    EXPECT_EQ(3, std::distance(mystring.begin(), it));
+}
+
+TEST(MyString, find_first_not_needle_not_in_haystack_finds_begin)
+{
+    auto haystack = new_buffer("aaaxaaxaaax");
+    char needle = 'c';
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_first_not(needle);
+    EXPECT_EQ(it, mystring.begin());
+}
+
+TEST(MyString, find_first_not_empty_string_finds_end)
+{
+    auto haystack = new_buffer("");
+    char needle = 'c';
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_first_not(needle);
+    EXPECT_EQ(it, mystring.end());
+}
+
+TEST(MyString, find_last_not)
+{
+    auto haystack = new_buffer("aaaxaaxaaa");
+    char needle = 'a';
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_last_not(needle);
+    EXPECT_EQ(*it, 'x');
+    EXPECT_EQ(4, std::distance(it, mystring.end()));
+    EXPECT_EQ(6, std::distance(mystring.begin(), it));
+}
+
+TEST(MyString, find_last_not_empty_string_finds_end)
+{
+    auto haystack = new_buffer("");
+    char needle = 'a';
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_last_not(needle);
+    EXPECT_EQ(it, mystring.end());
+}
+
+TEST(MyString, find_last_not_needle_is_first_character_finds_begin)
+{
+    auto haystack = new_buffer("axxxxxxxxx");
+    char needle = 'x';
+
+    auto mystring = mystring_from_buffer(haystack);
+    auto it = mystring.find_last_not(needle);
+    EXPECT_EQ(it, mystring.begin());
 }
 
 TEST(MyString, string_copy)
@@ -160,4 +258,100 @@ TEST(MyString, substring_pos_only_out_of_bounds_throws_std_out_of_range)
 
     auto mystring = mystring_from_buffer(buffer);
     EXPECT_THROW(mystring.substr(44), std::out_of_range);
+}
+
+TEST(MyString, split_first)
+{
+    auto buffer = new_buffer("Long:String");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystr::MyString first{buffer}, second{buffer};
+    std::tie(first, second) = mystring.split_first(':');
+    EXPECT_EQ("Long", first.str());
+    EXPECT_EQ("String", second.str());
+}
+
+TEST(MyString, split_first_separator_is_first_character)
+{
+    auto buffer = new_buffer(":LongString");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystr::MyString first{buffer}, second{buffer};
+    std::tie(first, second) = mystring.split_first(':');
+    EXPECT_EQ("", first.str());
+    EXPECT_EQ("LongString", second.str());
+}
+
+TEST(MyString, split_first_separator_is_last_character)
+{
+    auto buffer = new_buffer("LongString:");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystr::MyString first{buffer}, second{buffer};
+    std::tie(first, second) = mystring.split_first(':');
+    EXPECT_EQ("LongString", first.str());
+    EXPECT_EQ("", second.str());
+}
+
+TEST(MyString, ltrim)
+{
+    auto buffer = new_buffer("    alma");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.ltrim();
+    EXPECT_EQ("alma", mystring.str());
+}
+
+TEST(MyString, ltrim_empty)
+{
+    auto buffer = new_buffer("");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.ltrim();
+    EXPECT_EQ("", mystring.str());
+}
+
+TEST(MyString, ltrim_trims_only_left_side)
+{
+    auto buffer = new_buffer("   alma  ");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.ltrim();
+    EXPECT_EQ("alma  ", mystring.str());
+}
+
+TEST(MyString, rtrim)
+{
+    auto buffer = new_buffer("alma    ");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.rtrim();
+    EXPECT_EQ("alma", mystring.str());
+}
+
+TEST(MyString, rtrim_empty)
+{
+    auto buffer = new_buffer("");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.rtrim();
+    EXPECT_EQ("", mystring.str());
+}
+
+TEST(MyString, rtrim_one_space)
+{
+    auto buffer = new_buffer("alma ");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.rtrim();
+    EXPECT_EQ("alma", mystring.str());
+}
+
+TEST(MyString, rtrim_trims_only_right_side)
+{
+    auto buffer = new_buffer("  alma     ");
+
+    auto mystring = mystring_from_buffer(buffer);
+    mystring.rtrim();
+    EXPECT_EQ("  alma", mystring.str());
 }
