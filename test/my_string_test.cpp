@@ -25,6 +25,14 @@ TEST(MyString, constructor)
     EXPECT_EQ("alma", mystring.str());
 }
 
+TEST(MyString, length)
+{
+    std::string str = "alma";
+    auto buffer = new_buffer(str);
+    auto mystring = mystring_from_buffer(buffer);
+    EXPECT_EQ(str.length(), mystring.length());
+}
+
 TEST(MyString, find_character)
 {
     auto haystack = new_buffer("Far far away in a galaxy");
