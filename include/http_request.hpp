@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <my_string.hpp>
+
 namespace http
 {
 enum class RequestType
@@ -49,6 +51,8 @@ private:
 
     std::string buffer_;
     ParseState parse_state_;
+
+    mystr::buffer_type buff_;
 };
 
 Request& operator>>(Request& lhs, const std::string& rhs);

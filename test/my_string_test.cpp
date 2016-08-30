@@ -4,18 +4,51 @@
 
 namespace
 {
-mystr::buffer_type new_buffer(const std::string& str)
+mystr::MyStringBuffer new_buffer(const std::string& str)
 {
-    mystr::buffer_type output = {};
-    std::copy(str.begin(), str.end(), output.data());
+    mystr::MyStringBuffer output;
+    output += str;
     return output;
 }
 
-mystr::MyString mystring_from_buffer(const mystr::buffer_type& buffer)
+mystr::MyString mystring_from_buffer(const mystr::MyStringBuffer& buffer)
 {
     auto end_pos = std::find(buffer.begin(), buffer.end(), '\0');
     return mystr::MyString(buffer, buffer.begin(), end_pos);
 }
+}
+
+TEST(MyStringBuffer, append)
+{
+    mystr::MyStringBuffer buffer;
+
+    buffer += "alma";
+    EXPECT_EQ("alma", buffer.str());
+
+    buffer += "banan";
+    EXPECT_EQ("almabanan", buffer.str());
+}
+
+TEST(MyStringBuffer, length)
+{
+    mystr::MyStringBuffer buffer;
+    std::string str = "alma";
+
+    buffer += str;
+    EXPECT_EQ(str, buffer.str());
+    EXPECT_EQ(str.length(), buffer.size());
+}
+
+TEST(MyStringBuffer, clear)
+{
+    mystr::MyStringBuffer buffer;
+
+    buffer += "alma";
+    EXPECT_EQ("alma", buffer.str());
+
+    buffer.clear();
+    EXPECT_TRUE(buffer.is_empty());
+    EXPECT_EQ("", buffer.str());
 }
 
 TEST(MyString, constructor)

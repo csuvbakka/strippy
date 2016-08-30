@@ -23,6 +23,7 @@ namespace http
 {
 Request::Request()
     : parse_state_(ParseState::NOT_STARTED)
+    , buff_()
 {
 }
 
@@ -62,6 +63,50 @@ std::string Request::operator[](const std::string& header_string)
     else
         return {};
 }
+
+// void Request::process_buffer()
+// {
+// if (parse_state_ == ParseState::NOT_STARTED)
+// {
+// util::string::erase_head_all(buffer_, '\n');
+// util::string::erase_head_all(buffer_, "\r\n"); // RFC2616 - 4.1
+// parse_state_ = ParseState::PARSING_REQUEST_LINE;
+// }
+
+// std::string header;
+// do
+// {
+// auto first_nl_pos = buffer_.find_first_of('\n');
+// if (first_nl_pos == std::string::npos)
+// return;
+
+// std::string line = buffer_.substr(0, first_nl_pos);
+// strip_cr(line);
+// buffer_.erase(0, first_nl_pos + 1);
+
+// if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
+// {
+// request_line_ = line;
+// parse_state_ = ParseState::PARSING_HEADERS;
+// }
+// else if (parse_state_ == ParseState::PARSING_HEADERS)
+// {
+// using namespace util::string;
+
+// if (line.empty())
+// parse_state_ = ParseState::DONE;
+// else if (starts_with_whitespace(line))
+// add_line_to_multiline_header(line, header);
+// else
+// {
+// std::string header_data;
+// std::tie(header, header_data) = split_first(line, ':');
+// if (!header.empty() && !header_data.empty())
+// headers_[header] = trim(header_data);
+// }
+// }
+// } while (!buffer_.empty());
+// }
 
 void Request::process_buffer()
 {

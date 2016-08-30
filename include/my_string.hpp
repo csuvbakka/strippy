@@ -6,23 +6,62 @@
 #include <exception>
 #include <iterator>
 
+#include <iostream>
+
 namespace mystr
 {
 using buffer_type = std::array<char, 8192>;
+void buffer_append(buffer_type& buffer, const std::string& str);
+
+class MyStringBuffer
+{
+public:
+    MyStringBuffer()
+        : begin_(buffer_.begin())
+        , end_(buffer_.begin())
+    {
+    }
+    using iterator = typename buffer_type::iterator;
+    using const_iterator = typename buffer_type::const_iterator;
+
+    const_iterator begin() const { return begin_; }
+    const_iterator end() const { return end_; }
+
+    void clear() { end_ = begin_; }
+    std::size_t size() { return std::distance(begin_, end_); }
+    bool is_empty() { return begin_ == end_; }
+
+    MyStringBuffer& operator+=(const std::string& str)
+    {
+        if (size() + str.length() > buffer_.max_size())
+            throw std::out_of_range("MyStringBuffer operator+=");
+
+        std::copy(std::begin(str), std::end(str), end_);
+        std::advance(end_, str.length());
+        return *this;
+    }
+
+    std::string str() { return std::string(begin_, end_); }
+
+private:
+    buffer_type buffer_;
+    iterator begin_;
+    iterator end_;
+};
 
 class MyString
 {
 public:
-    using iterator = typename buffer_type::iterator;
-    using const_iterator = typename buffer_type::const_iterator;
+    using iterator = typename MyStringBuffer::iterator;
+    using const_iterator = typename MyStringBuffer::const_iterator;
 
-    MyString(buffer_type& buffer)
+    MyString(MyStringBuffer& buffer)
         : buffer_(buffer)
         , begin_(buffer.begin())
         , end_(buffer.begin())
     {
     }
-    MyString(const buffer_type& buffer, const_iterator begin,
+    MyString(const MyStringBuffer& buffer, const_iterator begin,
              const_iterator end)
         : buffer_(buffer)
         , begin_(begin)
@@ -83,7 +122,7 @@ public:
     }
 
 private:
-    const buffer_type& buffer_;
+    const MyStringBuffer& buffer_;
     const_iterator begin_;
     const_iterator end_;
 };
