@@ -4,11 +4,7 @@
 #include <array>
 #include <cstring>
 #include <exception>
-#include <memory>
 #include <iterator>
-#include <tuple>
-
-#include <iostream>
 
 namespace mystr
 {
