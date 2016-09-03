@@ -28,7 +28,6 @@ class Request
 
 public:
     Request(mystr::MyStringBuffer& buffer);
-    // Request(const std::string& data);
 
     friend Request& operator>>(Request& lhs, const std::string& rhs);
 
@@ -39,18 +38,15 @@ public:
     bool done_parsing() { return parse_state_ == ParseState::DONE; }
 
 private:
-    std::string get_headers_to_process();
     void add_line_to_multiline_header(const mystr::MyString& line,
                                       const mystr::MyString& header);
 
 private:
     RequestType request_type_;
     ParseState parse_state_;
-    mystr::MyStringBuffer& buff_;
+    mystr::MyStringBuffer& buffer_;
     std::unordered_map<std::string, std::string> headers_;
     mystr::MyString request_line_;
-
-    std::string buffer_;
 };
 
 Request& operator>>(Request& lhs, const std::string& rhs);

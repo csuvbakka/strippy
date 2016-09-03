@@ -17,8 +17,8 @@ namespace http
 {
 Request::Request(mystr::MyStringBuffer& buffer)
     : parse_state_(ParseState::NOT_STARTED)
-    , buff_(buffer)
-    , request_line_(buff_)
+    , buffer_(buffer)
+    , request_line_(buffer_)
 {
 }
 
@@ -35,21 +35,21 @@ void Request::process_buffer()
 {
     if (parse_state_ == ParseState::NOT_STARTED)
     {
-        while (buff_.starts_with("\r\n"))
-            buff_.erase_head(2); // RFC2616 - 4.1
+        while (buffer_.starts_with("\r\n"))
+            buffer_.erase_head(2); // RFC2616 - 4.1
         parse_state_ = ParseState::PARSING_REQUEST_LINE;
     }
 
-    mystr::MyString header(buff_);
+    mystr::MyString header(buffer_);
     do
     {
-        auto first_nl_pos = buff_.find_first_of('\n');
-        if (first_nl_pos == buff_.end())
+        auto first_nl_pos = buffer_.find_first_of('\n');
+        if (first_nl_pos == buffer_.end())
             return;
 
-        auto line = mystr::MyString{buff_, buff_.begin(), first_nl_pos};
+        auto line = mystr::MyString{buffer_, buffer_.begin(), first_nl_pos};
         strip_cr(line);
-        buff_.erase_head_until(std::next(first_nl_pos));
+        buffer_.erase_head_until(std::next(first_nl_pos));
 
         if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
         {
@@ -66,31 +66,13 @@ void Request::process_buffer()
                 add_line_to_multiline_header(line, header);
             else
             {
-                mystr::MyString header_data(buff_);
+                mystr::MyString header_data(buffer_);
                 std::tie(header, header_data) = line.split_first(':');
                 if (!header.is_empty() && !header_data.is_empty())
                     headers_[header.str()] = trim_copy(header_data).str();
             }
         }
-    } while (!buff_.is_empty());
-}
-
-// [Invariant] buffer_ will start with the first character after
-// the line ending newline character if any
-std::string Request::get_headers_to_process()
-{
-    auto pos = buffer_.find_last_of('\n');
-    if (pos == std::string::npos)
-        return {};
-
-    auto to_process = buffer_.substr(0, pos);
-
-    if (buffer_.length() > pos)
-        buffer_ = buffer_.substr(pos + 1);
-    else
-        buffer_ = {};
-
-    return to_process;
+    } while (!buffer_.is_empty());
 }
 
 void Request::add_line_to_multiline_header(const mystr::MyString& line,
@@ -104,7 +86,7 @@ void Request::add_line_to_multiline_header(const mystr::MyString& line,
 
 Request& operator>>(Request& lhs, const std::string& rhs)
 {
-    lhs.buff_ += rhs;
+    lhs.buffer_ += rhs;
     lhs.process_buffer();
     return lhs;
 }
