@@ -2,6 +2,7 @@
 #include <timer.hpp>
 #include <socket_functions.hpp>
 #include <string_utils.hpp>
+#include <my_string.hpp>
 
 #include <iostream>
 #include <thread>
@@ -12,10 +13,12 @@ namespace http
 std::experimental::optional<http::Request> receive_request(int client_fd)
 {
     Timer timer(5000);
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     do
     {
-        request >> util::socket::recv_no_wait(client_fd);
+        util::socket::recv(client_fd, buffer);
+        // request.process_buffer();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         timer.reset();
     } while (!request.done_parsing() && !timer.is_timed_out());

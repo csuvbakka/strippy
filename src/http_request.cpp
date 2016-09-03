@@ -15,9 +15,9 @@ void strip_cr(mystr::MyString& str)
 
 namespace http
 {
-Request::Request()
+Request::Request(mystr::MyStringBuffer& buffer)
     : parse_state_(ParseState::NOT_STARTED)
-    , buff_()
+    , buff_(buffer)
     , request_line_(buff_)
 {
 }
@@ -49,7 +49,7 @@ void Request::process_buffer()
 
         auto line = mystr::MyString{buff_, buff_.begin(), first_nl_pos};
         strip_cr(line);
-        buff_.erase_head(std::next(first_nl_pos));
+        buff_.erase_head_until(std::next(first_nl_pos));
 
         if (parse_state_ == ParseState::PARSING_REQUEST_LINE)
         {
@@ -101,21 +101,7 @@ void Request::add_line_to_multiline_header(const mystr::MyString& line,
         if (!header.is_empty())
             headers_[header.str()] += line.substr(non_whitespace_pos).str();
 }
-// void Request::add_line_to_multiline_header(const std::string& line,
-// const std::string& header)
-// {
-// auto non_whitespace_pos = line.find_first_not_of("\t ");
-// if (non_whitespace_pos != std::string::npos)
-// if (!header.empty())
-// headers_[header] += line.substr(non_whitespace_pos);
-// }
 
-// Request& operator>>(Request& lhs, const std::string& rhs)
-// {
-// lhs.buffer_ += rhs;
-// lhs.process_buffer();
-// return lhs;
-// }
 Request& operator>>(Request& lhs, const std::string& rhs)
 {
     lhs.buff_ += rhs;

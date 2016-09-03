@@ -4,6 +4,7 @@
 #include <array>
 #include <cstring>
 #include <exception>
+#include <functional>
 #include <iterator>
 #include <tuple>
 
@@ -45,10 +46,21 @@ public:
         std::advance(end_, str.length());
         return *this;
     }
+    MyStringBuffer& operator+=(const char* str)
+    {
+        auto str_length = std::strlen(str);
+        if (size() + str_length > buffer_.max_size())
+            throw std::out_of_range("MyStringBuffer operator+=");
+
+        std::memcpy(end_, str, str_length);
+        std::advance(end_, str_length);
+
+        return *this;
+    }
     std::string str() const { return std::string(begin_, end_); }
 
     void erase_head(std::size_t len) { std::advance(begin_, len); }
-    void erase_head(iterator it) { begin_ = it; }
+    void erase_head_until(iterator it) { begin_ = it; }
 
     bool starts_with(const std::string& prefix) const
     {
@@ -96,7 +108,7 @@ public:
     {
     }
 
-    bool operator==(const MyString& rhs)
+    bool operator==(const MyString& rhs) const
     {
         return (begin_ == rhs.begin_ && end_ == rhs.end_);
     }
@@ -211,7 +223,7 @@ public:
                                    MyString(buffer_, std::next(it), end_));
     }
 
-    void ltrim() { begin_ = find_first_not(' '); }
+    void ltrim() { begin_ = find_first_not_of("\t "); }
     void rtrim()
     {
         auto it = find_last_not(' ');
@@ -234,4 +246,16 @@ private:
 MyString ltrim_copy(const MyString& str);
 MyString rtrim_copy(const MyString& str);
 MyString trim_copy(const MyString& str);
+}
+
+namespace std
+{
+template <> struct hash<::mystr::MyString>
+{
+    std::size_t operator()(const ::mystr::MyString& key) const
+    {
+        return (std::hash<::mystr::MyString::const_iterator>()(key.begin()) ^
+                std::hash<::mystr::MyString::const_iterator>()(key.end()));
+    }
+};
 }

@@ -18,7 +18,18 @@ mystr::MyString mystring_from_buffer(const mystr::MyStringBuffer& buffer)
 }
 }
 
-TEST(MyStringBuffer, append)
+TEST(MyStringBuffer, append_string)
+{
+    mystr::MyStringBuffer buffer;
+
+    buffer += std::string("alma");
+    EXPECT_EQ("alma", buffer.str());
+
+    buffer += std::string("banan");
+    EXPECT_EQ("almabanan", buffer.str());
+}
+
+TEST(MyStringBuffer, append_const_char_p)
 {
     mystr::MyStringBuffer buffer;
 
@@ -26,6 +37,23 @@ TEST(MyStringBuffer, append)
     EXPECT_EQ("alma", buffer.str());
 
     buffer += "banan";
+    EXPECT_EQ("almabanan", buffer.str());
+}
+
+TEST(MyStringBuffer, append_char_array)
+{
+    mystr::MyStringBuffer buffer;
+    char to_append[200] = {};
+
+    const char* str = "alma";
+    const char* str2 = "banan";
+
+    std::memcpy(to_append, str, std::strlen(str));
+    buffer += to_append;
+    EXPECT_EQ("alma", buffer.str());
+
+    std::memcpy(to_append, str2, std::strlen(str2));
+    buffer += to_append;
     EXPECT_EQ("almabanan", buffer.str());
 }
 

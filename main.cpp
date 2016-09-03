@@ -26,8 +26,8 @@ struct ChildThread
         if (message)
         {
             std::cout << message->request_line() << std::endl;
-            std::cout << (*message)["Host"] << std::endl;
-            std::cout << (*message)["User-Agent"] << std::endl;
+            // std::cout << (*message)["Host"] << std::endl;
+            // std::cout << (*message)["User-Agent"] << std::endl;
             // ClientSocket client;
             // if (!client.connect((*message)["Host"], 80))
             // std::cout << "failed to connect" << std::endl;

@@ -67,50 +67,60 @@ RequestStringBuilder& operator>>(RequestStringBuilder& lhs,
 
 TEST(HttpRequestTest, first_line_is_the_request_line)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     RequestStringBuilder builder;
     builder.request_line(REQUEST_LINE);
 
-    request >> builder.build();
+    buffer += builder.build();
+    request.process_buffer();
 
     EXPECT_EQ(builder.get_request_line(), request.request_line());
 }
 
 TEST(HttpRequestTest, parse_request_line_in_multiple_chunks)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     RequestStringBuilder builder;
 
     builder >> "GET /path/to/fi";
-    request >> builder.data();
+    buffer += builder.data();
+    request.process_buffer();
     EXPECT_EQ("", request.request_line());
 
     builder >> "le/index.html HTTP/1.0";
-    request >> builder.last();
+    buffer += builder.last();
+    request.process_buffer();
     EXPECT_EQ("", request.request_line());
 
-    request >> CRLF;
+    buffer += CRLF;
+    request.process_buffer();
     EXPECT_EQ(builder.data(), request.request_line());
 }
 
 TEST(HttpRequestTest, ignore_empty_lines_before_request_line)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     RequestStringBuilder builder;
     builder.request_line(REQUEST_LINE);
 
-    request >> CRLF + builder.build();
+    buffer += CRLF + builder.build();
+    request.process_buffer();
 
     EXPECT_EQ(builder.get_request_line(), request.request_line());
 }
 
 TEST(HttpRequestTest, parse_one_header)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     RequestStringBuilder builder;
 
     builder.request_line(REQUEST_LINE).header(HOST, "127.0.0.1");
-    request >> builder.build();
+    buffer += builder.build();
+    request.process_buffer();
 
     EXPECT_EQ(builder.get_request_line(), request.request_line());
     EXPECT_EQ(builder.get_header(HOST), request[HOST]);
@@ -118,29 +128,48 @@ TEST(HttpRequestTest, parse_one_header)
 
 TEST(HttpRequestTest, parse_one_header_in_chunks)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
-    request >> REQUEST_LINE >> CRLF >> host_header >> CRLF;
+    buffer += REQUEST_LINE;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += host_header;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
 
     EXPECT_EQ(host_data, request[HOST]);
 }
 
 TEST(HttpRequestTest, parse_two_headers)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
-    request >> REQUEST_LINE >> CRLF >> host_header >> CRLF >> referer_header >>
-        CRLF + CRLF;
+    buffer += REQUEST_LINE;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += host_header;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += referer_header;
+    request.process_buffer();
+    buffer += CRLF + CRLF;
+    request.process_buffer();
 
     EXPECT_EQ(host_data, request[HOST]);
     EXPECT_EQ(referer_data, request[REFERER]);
 
-    http::Request request_full;
+    http::Request request_full(buffer);
     request_full >>
         (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF);
 
@@ -150,20 +179,34 @@ TEST(HttpRequestTest, parse_two_headers)
 
 TEST(HttpRequestTest, parse_two_headers_with_newline_in_between)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
-    request >> REQUEST_LINE >> CRLF >> host_header.substr(0, 5) >>
-        host_header.substr(5) + CRLF + referer_header.substr(0, 5) >>
-        referer_header.substr(5) >> CRLF + CRLF;
+    buffer += REQUEST_LINE;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += host_header.substr(0, 5);
+    request.process_buffer();
+    buffer += host_header.substr(5);
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += referer_header.substr(0, 5);
+    request.process_buffer();
+    buffer += referer_header.substr(5);
+    request.process_buffer();
+    buffer += CRLF + CRLF;
+    request.process_buffer();
 
     EXPECT_EQ(host_data, request[HOST]);
     EXPECT_EQ(referer_data, request[REFERER]);
 
-    http::Request request_full;
+    http::Request request_full(buffer);
     request_full >>
         (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF);
 
@@ -173,86 +216,126 @@ TEST(HttpRequestTest, parse_two_headers_with_newline_in_between)
 
 TEST(HttpRequestTest, parse_two_headers_small_chunks)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
 
-    request >> REQUEST_LINE >> CRLF >> host_header;
+    buffer += REQUEST_LINE;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += host_header;
+    request.process_buffer();
     EXPECT_EQ("", request[HOST]);
 
-    request >> CRLF;
+    buffer += CRLF;
+    request.process_buffer();
     EXPECT_EQ(host_data, request[HOST]);
 
-    request >> referer_header;
+    buffer += referer_header;
+    request.process_buffer();
     EXPECT_EQ("", request[REFERER]);
 
-    request >> CRLF;
+    buffer += CRLF;
+    request.process_buffer();
     EXPECT_EQ(referer_data, request[REFERER]);
 }
 
 TEST(HttpRequestTest, any_number_of_spaces_between_colon_and_value)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ":   " + host_data;
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":           " + referer_data;
 
-    request >> REQUEST_LINE >> CRLF >> host_header;
+    buffer += REQUEST_LINE;
+    request.process_buffer();
+    buffer += CRLF;
+    request.process_buffer();
+    buffer += host_header;
+    request.process_buffer();
     EXPECT_EQ("", request[HOST]);
 
-    request >> CRLF;
+    buffer += CRLF;
+    request.process_buffer();
     EXPECT_EQ(host_data, request[HOST]);
 
-    request >> referer_header;
+    buffer += referer_header;
+    request.process_buffer();
     EXPECT_EQ("", request[REFERER]);
 
-    request >> CRLF;
+    buffer += CRLF;
+    request.process_buffer();
     EXPECT_EQ(referer_data, request[REFERER]);
 }
 
 TEST(HttpRequestTest,
      header_lines_starting_with_whitespace_are_part_of_the_previous_header_line)
 {
+    mystr::MyStringBuffer buffer;
 
     std::string referer_data_first_line =
         "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_data_second_line = "/wow/this/is/a/long/referer";
 
     {
-        http::Request request;
+        http::Request request(buffer);
         std::string separator = "\t";
         std::string referer_header = REFERER + ":" + referer_data_first_line +
                                      CRLF + separator +
                                      referer_data_second_line + CRLF;
 
-        request >> REQUEST_LINE >> CRLF >> referer_header >> CRLF;
+        buffer += REQUEST_LINE;
+        request.process_buffer();
+        buffer += CRLF;
+        request.process_buffer();
+        buffer += referer_header;
+        request.process_buffer();
+        buffer += CRLF;
+        request.process_buffer();
         EXPECT_EQ(referer_data_first_line + referer_data_second_line,
                   request[REFERER]);
     }
     {
-        http::Request request;
+        http::Request request(buffer);
         std::string separator = " ";
         std::string referer_header = REFERER + ":" + referer_data_first_line +
                                      CRLF + separator +
                                      referer_data_second_line + CRLF;
 
-        request >> REQUEST_LINE >> CRLF >> referer_header >> CRLF;
+        buffer += REQUEST_LINE;
+        request.process_buffer();
+        buffer += CRLF;
+        request.process_buffer();
+        buffer += referer_header;
+        request.process_buffer();
+        buffer += CRLF;
+        request.process_buffer();
         EXPECT_EQ(referer_data_first_line + referer_data_second_line,
                   request[REFERER]);
     }
     {
-        http::Request request;
+        http::Request request(buffer);
         std::string separator = "      ";
         std::string referer_header = REFERER + ":" + referer_data_first_line +
                                      CRLF + separator +
                                      referer_data_second_line + CRLF;
 
-        request >> REQUEST_LINE >> CRLF >> referer_header >> CRLF;
+        buffer += REQUEST_LINE;
+        request.process_buffer();
+        buffer += CRLF;
+        request.process_buffer();
+        buffer += referer_header;
+        request.process_buffer();
+        buffer += CRLF;
+        request.process_buffer();
         EXPECT_EQ(referer_data_first_line + referer_data_second_line,
                   request[REFERER]);
     }
@@ -260,14 +343,16 @@ TEST(HttpRequestTest,
 
 TEST(HttpRequestTest, double_crlf_ends_message)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     RequestStringBuilder builder;
 
     builder.request_line(REQUEST_LINE)
         .header(HOST, "localhost")
         .header(REFERER, "google.com");
 
-    request >> builder.build();
+    buffer += builder.build();
+    request.process_buffer();
 
     EXPECT_EQ(builder.get_header(HOST), request[HOST]);
     EXPECT_EQ(builder.get_header(REFERER), request[REFERER]);
@@ -276,16 +361,19 @@ TEST(HttpRequestTest, double_crlf_ends_message)
 
 TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
 {
-    http::Request request;
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
     RequestStringBuilder builder;
 
     builder.request_line(REQUEST_LINE).header(HOST, "localhost");
 
-    request >> builder.build();
+    buffer += builder.build();
+    request.process_buffer();
     EXPECT_TRUE(request.done_parsing());
 
     builder.header(REFERER, "google.com");
-    request >> builder.build();
+    buffer += builder.build();
+    request.process_buffer();
 
     EXPECT_TRUE(request.done_parsing());
     EXPECT_EQ("", request[REFERER]);

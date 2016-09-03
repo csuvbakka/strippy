@@ -25,6 +25,15 @@ std::string recv(int socket_fd, int flags)
     else
         return std::string(buf).substr(0, bytes);
 }
+
+void recv(int socket_fd, mystr::MyStringBuffer& buffer)
+{
+    char buf[1024] = {};
+    std::size_t bytes = ::recv(socket_fd, buf, 1024, MSG_DONTWAIT);
+    if (bytes > 0)
+        buffer += buf;
+}
+
 std::string recv_no_wait(int socket_fd)
 {
     return recv(socket_fd, MSG_DONTWAIT);

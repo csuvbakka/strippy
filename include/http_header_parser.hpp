@@ -4,17 +4,17 @@
 #include <vector>
 #include <unordered_map>
 
+#include "my_string.hpp"
+
 namespace http
 {
 class HeaderParser
 {
 public:
-    friend HeaderParser& operator>>(HeaderParser& lhs, const std::string& rhs);
-
-    std::unordered_map<std::string, std::string> headers();
+    HeaderParser(const mystr::MyString& str);
 
 private:
-    std::vector<std::string> lines_;
+    std::unordered_map<std::string, std::string> headers_;
+    mystr::MyString string_;
 };
-HeaderParser& operator>>(HeaderParser& lhs, const std::string& rhs);
 }
