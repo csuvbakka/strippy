@@ -47,10 +47,9 @@ void Request::process_buffer()
     else if (parse_state_ == ParseState::PARSING_CONTENT)
     {
         if (content_.is_empty())
-            content_ = mystr::MyString(buffer_, buffer_.begin(), buffer_.end());
+            content_ = string_view(buffer_, buffer_.begin(), buffer_.end());
         else
-            content_ =
-                mystr::MyString(buffer_, content_.begin(), buffer_.end());
+            content_ = string_view(buffer_, content_.begin(), buffer_.end());
 
         buffer_.erase_head_until(buffer_.end());
         if (content_.length() > content_length_)
@@ -62,14 +61,14 @@ void Request::process_buffer()
         return;
     }
 
-    mystr::MyString header(buffer_);
+    string_view header(buffer_);
     do
     {
         auto first_nl_pos = buffer_.find_first_of('\n');
         if (first_nl_pos == buffer_.end())
             return;
 
-        auto line = mystr::MyString{buffer_, buffer_.begin(), first_nl_pos};
+        auto line = string_view{buffer_, buffer_.begin(), first_nl_pos};
         strip_cr(line);
         buffer_.erase_head_until(std::next(first_nl_pos));
 
@@ -98,7 +97,7 @@ void Request::process_buffer()
                 add_line_to_multiline_header(line, header);
             else
             {
-                mystr::MyString header_data(buffer_);
+                string_view header_data(buffer_);
                 std::tie(header, header_data) = line.split_first(':');
                 if (!header.is_empty() && !header_data.is_empty())
                     headers_[header.str()] = trim_copy(header_data).str();
@@ -107,8 +106,8 @@ void Request::process_buffer()
     } while (!buffer_.is_empty());
 }
 
-void Request::add_line_to_multiline_header(const mystr::MyString& line,
-                                           const mystr::MyString& header)
+void Request::add_line_to_multiline_header(const string_view& line,
+                                           const string_view& header)
 {
     auto non_whitespace_pos = line.find_first_not_of("\t ");
     if (non_whitespace_pos != line.end())

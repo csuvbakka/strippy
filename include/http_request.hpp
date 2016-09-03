@@ -17,6 +17,7 @@ enum class RequestType
 
 class Request
 {
+    using string_view = mystr::MyString;
     enum class ParseState
     {
         NOT_STARTED,
@@ -47,15 +48,15 @@ public:
     }
 
 private:
-    void add_line_to_multiline_header(const mystr::MyString& line,
-                                      const mystr::MyString& header);
+    void add_line_to_multiline_header(const string_view& line,
+                                      const string_view& header);
 
 private:
     RequestType request_type_;
     ParseState parse_state_;
     mystr::MyStringBuffer& buffer_;
-    mystr::MyString request_line_;
-    mystr::MyString content_;
+    string_view request_line_;
+    string_view content_;
     int content_length_;
     std::unordered_map<std::string, std::string> headers_;
 };
