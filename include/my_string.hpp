@@ -43,6 +43,20 @@ public:
         return buffer_ == rhs.buffer_;
     }
     bool operator!=(const MyStringBuffer& rhs) const { return !(*this == rhs); }
+
+    void append(const char* str, std::size_t len)
+    {
+        if (len > 0)
+        {
+            if (size() + len > buffer_.max_size())
+                throw std::out_of_range("MyStringBuffer operator+=");
+
+            std::memcpy(end_, str, len);
+            end_ += len;
+
+            std::cout << "size after append: " << size() << std::endl;
+        }
+    }
     MyStringBuffer& operator+=(const char* str)
     {
         auto str_length = std::strlen(str);

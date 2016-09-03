@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 namespace
 {
@@ -52,6 +53,7 @@ bool ClientSocket::connect(const std::string& host, int port)
         return false;
     }
 
+    // int yes = 1;
     // loop through all the results and connect to the first we can
     for (p = servinfo; p != NULL; p = p->ai_next)
     {
@@ -61,6 +63,13 @@ bool ClientSocket::connect(const std::string& host, int port)
             perror("client: socket");
             continue;
         }
+
+        // if (setsockopt(sockfd_, SOL_TCP, TCP_NODELAY, &yes, sizeof(int)) ==
+        // -1)
+        // {
+        // perror("setsockopt");
+        // return false;
+        // }
 
         if (::connect(sockfd_, p->ai_addr, p->ai_addrlen) == -1)
         {

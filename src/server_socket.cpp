@@ -4,6 +4,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 #include <iostream>
 #include <string>
@@ -57,6 +58,12 @@ bool ServerSocket::bind(int port)
             perror("setsockopt");
             return false;
         }
+        // if (setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &yes, sizeof(int)) ==
+        // -1)
+        // {
+        // perror("setsockopt");
+        // return false;
+        // }
 
         if (::bind(sockfd, p->ai_addr, p->ai_addrlen) == -1)
         {

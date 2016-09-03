@@ -9,19 +9,13 @@ namespace util
 {
 namespace socket
 {
-template <typename T> std::size_t send(int socket_fd, const T& message)
-{
-    std::string message_str = std::to_string(message);
-    return send(socket_fd, message_str);
-}
 
-template <> std::size_t send(int socket_fd, const std::string& message);
+std::size_t send(int socket_fd, const std::string& message);
+std::size_t send(int socket_fd, const char* message, std::size_t len);
 
-template <typename T> std::size_t send(int socket_fd, const T* message);
-template <> std::size_t send(int socket_fd, const char* message);
-
-std::string recv(int socket_fd, int flags = 0);
-void recv(int socket_fd, mystr::MyStringBuffer& buffer);
-std::string recv_no_wait(int socket_fd);
+int recvv(int socket_fd, char* buffer, std::size_t len);
+// std::string recv(int socket_fd, int flags = 0);
+int recv(int socket_fd, mystr::MyStringBuffer& buffer);
+void recv_dont_wait(int socket_fd, mystr::MyStringBuffer& buffer);
 }
 }

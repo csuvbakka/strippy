@@ -38,6 +38,8 @@ public:
     std::string operator[](const std::string& header) const;
     std::string data() const { return buffer_.data(); }
     std::string request_line() const { return request_line_.str(); }
+    std::size_t content_length() const { return content_length_; }
+
     std::string content() const { return content_.str(); }
 
     void process_buffer();
@@ -57,7 +59,7 @@ private:
     mystr::MyStringBuffer& buffer_;
     string_view request_line_;
     string_view content_;
-    int content_length_;
+    std::size_t content_length_;
     std::unordered_map<std::string, std::string> headers_;
 };
 }
