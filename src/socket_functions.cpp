@@ -18,8 +18,10 @@ template <> std::size_t send(int socket_fd, const char* message)
 
 std::string recv(int socket_fd, int flags)
 {
-    char buf[1024] = {};
-    std::size_t bytes = ::recv(socket_fd, buf, 1024, flags);
+    // char buf[1024] = {};
+    char buf[50000] = {};
+    std::size_t bytes = ::recv(socket_fd, buf, 50000, flags);
+    // std::size_t bytes = ::recv(socket_fd, buf, 1024, flags);
     if (bytes <= 0)
         return {};
     else

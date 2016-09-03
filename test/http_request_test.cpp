@@ -395,3 +395,25 @@ TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
     EXPECT_TRUE(request.done_parsing());
     EXPECT_EQ("", request[REFERER]);
 }
+
+TEST(HttpRequestTest, request_with_data)
+{
+    mystr::MyStringBuffer buffer;
+    http::Request request(buffer);
+    RequestStringBuilder builder;
+
+    builder.request_line(REQUEST_LINE)
+        .header(HOST, "localhost")
+        .header(REFERER, "127.0.0.1")
+        .header("Content-Length", "4");
+
+    buffer += builder.build().c_str();
+    request.process_buffer();
+
+    buffer += "alma";
+    request.process_buffer();
+
+    EXPECT_TRUE(request.done_parsing());
+    EXPECT_EQ("", request[REFERER]);
+    EXPECT_EQ("alma", request.content());
+}

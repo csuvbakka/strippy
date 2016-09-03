@@ -35,21 +35,28 @@ struct ChildThread
             ClientSocket client;
             if (!client.connect(host, 80))
                 std::cout << "failed to connect" << std::endl;
-            std::cout << "sending " << message.data() << std::endl;
-            // auto sent = util::socket::send(client.sockfd_, message->data());
-            // std::cout << "sent bytes: " << sent << std::endl;
-            // auto response = http::receive_response(client.sockfd_);
-            // std::cout << "waiting for response" << std::endl;
-            // if (response)
-            // {
-            // std::cout << "response: " << std::endl;
-            // // std::cout << response->data() << std::endl;
-            // }
-        }
+            else
+            {
+                std::cout << "sending to " << host << ": " << message.data()
+                          << std::endl;
+                auto sent = util::socket::send(client.sockfd_, message.data());
+                std::cout << "sent bytes: " << sent << std::endl;
 
-        // send(client_fd, "Content-Type: text/plain\r\n");
-        // send(client_fd, 1337);
-        // send(client_fd, std::string("almafa"));
+                std::string buf;
+                buf.reserve(50000);
+                buf = util::socket::recv(client.sockfd_);
+                std::cout << "got " << buf << std::endl;
+
+                util::socket::send(client_fd, buf);
+                // auto response = http::receive_response(client.sockfd_);
+                // std::cout << "waiting for response" << std::endl;
+                // if (response)
+                // {
+                // std::cout << "response: " << std::endl;
+                // // std::cout << response->data() << std::endl;
+                // }
+            }
+        }
 
         close(client_fd);
     }
