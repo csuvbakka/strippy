@@ -28,24 +28,19 @@ public:
     const_iterator begin() const { return begin_; }
     const_iterator end() const { return end_; }
 
-    void clear() { end_ = begin_; }
+    void clear() { end_ = begin_ = std::begin(buffer_); }
     std::size_t size() const { return std::distance(begin_, end_); }
     bool is_empty() const { return begin_ == end_; }
+    std::string data() const
+    {
+        return std::string(std::begin(buffer_), std::end(buffer_));
+    }
 
     bool operator==(const MyStringBuffer& rhs) const
     {
         return buffer_ == rhs.buffer_;
     }
     bool operator!=(const MyStringBuffer& rhs) const { return !(*this == rhs); }
-    MyStringBuffer& operator+=(const std::string& str)
-    {
-        if (size() + str.length() > buffer_.max_size())
-            throw std::out_of_range("MyStringBuffer operator+=");
-
-        std::copy(std::begin(str), std::end(str), end_);
-        std::advance(end_, str.length());
-        return *this;
-    }
     MyStringBuffer& operator+=(const char* str)
     {
         auto str_length = std::strlen(str);

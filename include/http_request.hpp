@@ -29,8 +29,6 @@ class Request
 public:
     Request(mystr::MyStringBuffer& buffer);
 
-    friend Request& operator>>(Request& lhs, const std::string& rhs);
-
     std::string request_line() { return request_line_.str(); }
     std::string operator[](const std::string& header);
 
@@ -45,9 +43,7 @@ private:
     RequestType request_type_;
     ParseState parse_state_;
     mystr::MyStringBuffer& buffer_;
-    std::unordered_map<std::string, std::string> headers_;
     mystr::MyString request_line_;
+    std::unordered_map<std::string, std::string> headers_;
 };
-
-Request& operator>>(Request& lhs, const std::string& rhs);
 }

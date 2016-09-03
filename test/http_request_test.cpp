@@ -8,8 +8,15 @@ namespace
 const std::string HOST = "Host";
 const std::string REFERER = "Referer";
 const std::string CRLF = "\r\n";
+const char* CRLFp = "\r\n";
 
 const std::string REQUEST_LINE = "GET /path/to/file/index.html HTTP/1.0";
+
+// const char* HOST = "Host";
+// const char* REFERER = "Referer";
+// const char* CRLF = "\r\n";
+
+// const char* REQUEST_LINE = "GET /path/to/file/index.html HTTP/1.0";
 
 class RequestStringBuilder
 {
@@ -40,8 +47,8 @@ public:
         return output;
     }
 
-    std::string data() { return request_string_; }
-    std::string last() { return last_added_; }
+    const char* data() { return request_string_.c_str(); }
+    const char* last() { return last_added_.c_str(); }
 
     std::string get_request_line() { return request_line_; }
     std::string get_header(const std::string& header)
@@ -72,7 +79,7 @@ TEST(HttpRequestTest, first_line_is_the_request_line)
     RequestStringBuilder builder;
     builder.request_line(REQUEST_LINE);
 
-    buffer += builder.build();
+    buffer += builder.build().c_str();
     request.process_buffer();
 
     EXPECT_EQ(builder.get_request_line(), request.request_line());
@@ -94,7 +101,7 @@ TEST(HttpRequestTest, parse_request_line_in_multiple_chunks)
     request.process_buffer();
     EXPECT_EQ("", request.request_line());
 
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
     EXPECT_EQ(builder.data(), request.request_line());
 }
@@ -106,7 +113,9 @@ TEST(HttpRequestTest, ignore_empty_lines_before_request_line)
     RequestStringBuilder builder;
     builder.request_line(REQUEST_LINE);
 
-    buffer += CRLF + builder.build();
+    buffer += CRLFp;
+    request.process_buffer();
+    buffer += builder.build().c_str();
     request.process_buffer();
 
     EXPECT_EQ(builder.get_request_line(), request.request_line());
@@ -119,7 +128,7 @@ TEST(HttpRequestTest, parse_one_header)
     RequestStringBuilder builder;
 
     builder.request_line(REQUEST_LINE).header(HOST, "127.0.0.1");
-    buffer += builder.build();
+    buffer += builder.build().c_str();
     request.process_buffer();
 
     EXPECT_EQ(builder.get_request_line(), request.request_line());
@@ -132,13 +141,13 @@ TEST(HttpRequestTest, parse_one_header_in_chunks)
     http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
-    buffer += REQUEST_LINE;
+    buffer += REQUEST_LINE.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += host_header;
+    buffer += host_header.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
 
     EXPECT_EQ(host_data, request[HOST]);
@@ -153,25 +162,29 @@ TEST(HttpRequestTest, parse_two_headers)
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
-    buffer += REQUEST_LINE;
+    buffer += REQUEST_LINE.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += host_header;
+    buffer += host_header.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += referer_header;
+    buffer += referer_header.c_str();
     request.process_buffer();
-    buffer += CRLF + CRLF;
+    buffer += CRLFp;
+    request.process_buffer();
+    buffer += CRLFp;
     request.process_buffer();
 
     EXPECT_EQ(host_data, request[HOST]);
     EXPECT_EQ(referer_data, request[REFERER]);
 
+    buffer.clear();
     http::Request request_full(buffer);
-    request_full >>
-        (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF);
+    buffer += (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF)
+                  .c_str();
+    request_full.process_buffer();
 
     EXPECT_EQ(host_data, request_full[HOST]);
     EXPECT_EQ(referer_data, request_full[REFERER]);
@@ -186,29 +199,33 @@ TEST(HttpRequestTest, parse_two_headers_with_newline_in_between)
 
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
-    buffer += REQUEST_LINE;
+    buffer += REQUEST_LINE.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += host_header.substr(0, 5);
+    buffer += host_header.substr(0, 5).c_str();
     request.process_buffer();
-    buffer += host_header.substr(5);
+    buffer += host_header.substr(5).c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += referer_header.substr(0, 5);
+    buffer += referer_header.substr(0, 5).c_str();
     request.process_buffer();
-    buffer += referer_header.substr(5);
+    buffer += referer_header.substr(5).c_str();
     request.process_buffer();
-    buffer += CRLF + CRLF;
+    buffer += CRLFp;
+    request.process_buffer();
+    buffer += CRLFp;
     request.process_buffer();
 
     EXPECT_EQ(host_data, request[HOST]);
     EXPECT_EQ(referer_data, request[REFERER]);
 
+    buffer.clear();
     http::Request request_full(buffer);
-    request_full >>
-        (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF);
+    buffer += (REQUEST_LINE + CRLF + host_header + CRLF + referer_header + CRLF)
+                  .c_str();
+    request_full.process_buffer();
 
     EXPECT_EQ(host_data, request_full[HOST]);
     EXPECT_EQ(referer_data, request_full[REFERER]);
@@ -224,23 +241,23 @@ TEST(HttpRequestTest, parse_two_headers_small_chunks)
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":" + referer_data;
 
-    buffer += REQUEST_LINE;
+    buffer += REQUEST_LINE.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += host_header;
+    buffer += host_header.c_str();
     request.process_buffer();
     EXPECT_EQ("", request[HOST]);
 
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
     EXPECT_EQ(host_data, request[HOST]);
 
-    buffer += referer_header;
+    buffer += referer_header.c_str();
     request.process_buffer();
     EXPECT_EQ("", request[REFERER]);
 
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
     EXPECT_EQ(referer_data, request[REFERER]);
 }
@@ -255,23 +272,23 @@ TEST(HttpRequestTest, any_number_of_spaces_between_colon_and_value)
     std::string referer_data = "http://en.wikipedia.org/wiki/Main_Page";
     std::string referer_header = REFERER + ":           " + referer_data;
 
-    buffer += REQUEST_LINE;
+    buffer += REQUEST_LINE.c_str();
     request.process_buffer();
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
-    buffer += host_header;
+    buffer += host_header.c_str();
     request.process_buffer();
     EXPECT_EQ("", request[HOST]);
 
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
     EXPECT_EQ(host_data, request[HOST]);
 
-    buffer += referer_header;
+    buffer += referer_header.c_str();
     request.process_buffer();
     EXPECT_EQ("", request[REFERER]);
 
-    buffer += CRLF;
+    buffer += CRLFp;
     request.process_buffer();
     EXPECT_EQ(referer_data, request[REFERER]);
 }
@@ -292,13 +309,13 @@ TEST(HttpRequestTest,
                                      CRLF + separator +
                                      referer_data_second_line + CRLF;
 
-        buffer += REQUEST_LINE;
+        buffer += REQUEST_LINE.c_str();
         request.process_buffer();
-        buffer += CRLF;
+        buffer += CRLFp;
         request.process_buffer();
-        buffer += referer_header;
+        buffer += referer_header.c_str();
         request.process_buffer();
-        buffer += CRLF;
+        buffer += CRLFp;
         request.process_buffer();
         EXPECT_EQ(referer_data_first_line + referer_data_second_line,
                   request[REFERER]);
@@ -310,13 +327,13 @@ TEST(HttpRequestTest,
                                      CRLF + separator +
                                      referer_data_second_line + CRLF;
 
-        buffer += REQUEST_LINE;
+        buffer += REQUEST_LINE.c_str();
         request.process_buffer();
-        buffer += CRLF;
+        buffer += CRLFp;
         request.process_buffer();
-        buffer += referer_header;
+        buffer += referer_header.c_str();
         request.process_buffer();
-        buffer += CRLF;
+        buffer += CRLFp;
         request.process_buffer();
         EXPECT_EQ(referer_data_first_line + referer_data_second_line,
                   request[REFERER]);
@@ -328,13 +345,13 @@ TEST(HttpRequestTest,
                                      CRLF + separator +
                                      referer_data_second_line + CRLF;
 
-        buffer += REQUEST_LINE;
+        buffer += REQUEST_LINE.c_str();
         request.process_buffer();
-        buffer += CRLF;
+        buffer += CRLFp;
         request.process_buffer();
-        buffer += referer_header;
+        buffer += referer_header.c_str();
         request.process_buffer();
-        buffer += CRLF;
+        buffer += CRLFp;
         request.process_buffer();
         EXPECT_EQ(referer_data_first_line + referer_data_second_line,
                   request[REFERER]);
@@ -351,7 +368,7 @@ TEST(HttpRequestTest, double_crlf_ends_message)
         .header(HOST, "localhost")
         .header(REFERER, "google.com");
 
-    buffer += builder.build();
+    buffer += builder.build().c_str();
     request.process_buffer();
 
     EXPECT_EQ(builder.get_header(HOST), request[HOST]);
@@ -367,12 +384,12 @@ TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
 
     builder.request_line(REQUEST_LINE).header(HOST, "localhost");
 
-    buffer += builder.build();
+    buffer += builder.build().c_str();
     request.process_buffer();
     EXPECT_TRUE(request.done_parsing());
 
     builder.header(REFERER, "google.com");
-    buffer += builder.build();
+    buffer += builder.build().c_str();
     request.process_buffer();
 
     EXPECT_TRUE(request.done_parsing());

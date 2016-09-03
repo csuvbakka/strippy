@@ -83,11 +83,4 @@ void Request::add_line_to_multiline_header(const mystr::MyString& line,
         if (!header.is_empty())
             headers_[header.str()] += line.substr(non_whitespace_pos).str();
 }
-
-Request& operator>>(Request& lhs, const std::string& rhs)
-{
-    lhs.buffer_ += rhs;
-    lhs.process_buffer();
-    return lhs;
-}
 }
