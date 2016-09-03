@@ -10,23 +10,19 @@
 
 namespace http
 {
-std::experimental::optional<http::Request> receive_request(int client_fd)
+http::Request receive_request(int client_fd, mystr::MyStringBuffer& buffer)
 {
     Timer timer(5000);
-    mystr::MyStringBuffer buffer;
     http::Request request(buffer);
     do
     {
         util::socket::recv(client_fd, buffer);
-        // request.process_buffer();
+        request.process_buffer();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         timer.reset();
     } while (!request.done_parsing() && !timer.is_timed_out());
 
-    if (timer.is_timed_out())
-        return {};
-    else
-        return request;
+    return request;
 }
 
 // std::experimental::optional<http::Response> receive_response(int client_fd)
@@ -75,20 +71,20 @@ std::experimental::optional<http::Request> receive_request(int client_fd)
 // return http::Response(message);
 // }
 
-std::experimental::optional<http::Response> receive_response(int client_fd)
-{
-    std::string message = {}, buffer = {};
-    buffer.reserve(1024);
-    message.reserve(1024);
-    do
-    {
-        std::cout << "filling buffer" << std::endl;
-        buffer = util::socket::recv(client_fd);
-        std::cout << "got " << buffer << std::endl;
-        message += buffer;
-    } while (!buffer.empty() && !util::string::ends_with(buffer, "\r\n\r\n"));
-    // std::cout << message << std::endl;
+// std::experimental::optional<http::Response> receive_response(int client_fd)
+// {
+// std::string message = {}, buffer = {};
+// buffer.reserve(1024);
+// message.reserve(1024);
+// do
+// {
+// std::cout << "filling buffer" << std::endl;
+// buffer = util::socket::recv(client_fd);
+// std::cout << "got " << buffer << std::endl;
+// message += buffer;
+// } while (!buffer.empty() && !util::string::ends_with(buffer, "\r\n\r\n"));
+// // std::cout << message << std::endl;
 
-    return http::Response(message);
-}
+// return http::Response(message);
+// }
 }

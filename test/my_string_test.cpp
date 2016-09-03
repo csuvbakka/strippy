@@ -57,15 +57,24 @@ TEST(MyStringBuffer, append_char_array)
     EXPECT_EQ("almabanan", buffer.str());
 }
 
-// TEST(MyStringBuffer, length)
-// {
-// mystr::MyStringBuffer buffer;
-// std::string str = "alma";
+TEST(MyStringBuffer, data)
+{
+    mystr::MyStringBuffer buffer;
+    std::string str = "alma";
 
-// buffer += str;
-// EXPECT_EQ(str, buffer.str());
-// EXPECT_EQ(str.length(), buffer.size());
-// }
+    buffer += str.c_str();
+    EXPECT_EQ(str, buffer.data());
+}
+
+TEST(MyStringBuffer, length)
+{
+    mystr::MyStringBuffer buffer;
+    std::string str = "alma";
+
+    buffer += str.c_str();
+    EXPECT_EQ(str, buffer.str());
+    EXPECT_EQ(str.length(), buffer.size());
+}
 
 TEST(MyStringBuffer, clear)
 {

@@ -31,10 +31,7 @@ public:
     void clear() { end_ = begin_ = std::begin(buffer_); }
     std::size_t size() const { return std::distance(begin_, end_); }
     bool is_empty() const { return begin_ == end_; }
-    std::string data() const
-    {
-        return std::string(std::begin(buffer_), std::end(buffer_));
-    }
+    std::string data() const { return std::string(std::begin(buffer_), end()); }
 
     bool operator==(const MyStringBuffer& rhs) const
     {

@@ -28,12 +28,17 @@ class Request
 
 public:
     Request(mystr::MyStringBuffer& buffer);
+    ~Request() = default;
+    Request(const Request&) = delete;
+    Request(Request&&) = default;
 
-    std::string request_line() { return request_line_.str(); }
-    std::string operator[](const std::string& header);
+    explicit operator bool() const { return done_parsing(); }
+    std::string operator[](const std::string& header) const;
+    std::string data() const { return buffer_.data(); }
+    std::string request_line() const { return request_line_.str(); }
 
     void process_buffer();
-    bool done_parsing() { return parse_state_ == ParseState::DONE; }
+    bool done_parsing() const { return parse_state_ == ParseState::DONE; }
 
 private:
     void add_line_to_multiline_header(const mystr::MyString& line,

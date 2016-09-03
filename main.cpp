@@ -22,16 +22,20 @@ struct ChildThread
 {
     void operator()(int client_fd)
     {
-        auto message = http::receive_request(client_fd);
+        mystr::MyStringBuffer buffer;
+        auto message = http::receive_request(client_fd, buffer);
         if (message)
         {
-            std::cout << message->request_line() << std::endl;
-            // std::cout << (*message)["Host"] << std::endl;
-            // std::cout << (*message)["User-Agent"] << std::endl;
-            // ClientSocket client;
-            // if (!client.connect((*message)["Host"], 80))
-            // std::cout << "failed to connect" << std::endl;
-            // std::cout << "sending " << message->data() << std::endl;
+            // std::cout << message.request_line() << std::endl;
+            // std::cout << message["Host"] << std::endl;
+            // std::cout << message["User-Agent"] << std::endl;
+
+            // std::cout << "Data:\n" << message.data() << std::endl;
+            const std::string& host = message["Host"];
+            ClientSocket client;
+            if (!client.connect(host, 80))
+                std::cout << "failed to connect" << std::endl;
+            std::cout << "sending " << message.data() << std::endl;
             // auto sent = util::socket::send(client.sockfd_, message->data());
             // std::cout << "sent bytes: " << sent << std::endl;
             // auto response = http::receive_response(client.sockfd_);

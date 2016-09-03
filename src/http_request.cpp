@@ -22,7 +22,7 @@ Request::Request(mystr::MyStringBuffer& buffer)
 {
 }
 
-std::string Request::operator[](const std::string& header_string)
+std::string Request::operator[](const std::string& header_string) const
 {
     auto it = headers_.find(header_string);
     if (it != headers_.end())
