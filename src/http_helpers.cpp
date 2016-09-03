@@ -20,7 +20,7 @@ http::Request receive_request(int client_fd, mystr::MyStringBuffer& buffer)
         request.process_buffer();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         timer.reset();
-    } while (!request.done_parsing() && !timer.is_timed_out());
+    } while (!request.is_done() && !timer.is_timed_out());
 
     return request;
 }

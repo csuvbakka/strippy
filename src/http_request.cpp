@@ -19,6 +19,8 @@ Request::Request(mystr::MyStringBuffer& buffer)
     : parse_state_(ParseState::NOT_STARTED)
     , buffer_(buffer)
     , request_line_(buffer_)
+    , content_(buffer_)
+    , content_length_(0)
 {
 }
 
@@ -33,11 +35,31 @@ std::string Request::operator[](const std::string& header_string) const
 
 void Request::process_buffer()
 {
+    if (parse_state_ == ParseState::DONE)
+        return;
+
     if (parse_state_ == ParseState::NOT_STARTED)
     {
         while (buffer_.starts_with("\r\n"))
             buffer_.erase_head(2); // RFC2616 - 4.1
         parse_state_ = ParseState::PARSING_REQUEST_LINE;
+    }
+    else if (parse_state_ == ParseState::PARSING_CONTENT)
+    {
+        if (content_.is_empty())
+            content_ = mystr::MyString(buffer_, buffer_.begin(), buffer_.end());
+        else
+            content_ =
+                mystr::MyString(buffer_, content_.begin(), buffer_.end());
+
+        buffer_.erase_head_until(buffer_.end());
+        if (content_.length() > content_length_)
+            content_.erase_tail(content_.length() - content_length_);
+
+        if (content_.length() == content_length_)
+            parse_state_ = ParseState::DONE;
+
+        return;
     }
 
     mystr::MyString header(buffer_);
@@ -61,7 +83,17 @@ void Request::process_buffer()
             using namespace util::string;
 
             if (line.is_empty())
-                parse_state_ = ParseState::DONE;
+            {
+                static const std::string content_length_str = "Content-Length";
+                std::string l = headers_[content_length_str];
+                if (l.empty())
+                    parse_state_ = ParseState::DONE;
+                else
+                {
+                    parse_state_ = ParseState::PARSING_CONTENT;
+                    content_length_ = std::stoi(l);
+                }
+            }
             else if (line.starts_with(' ') || line.starts_with('\t'))
                 add_line_to_multiline_header(line, header);
             else

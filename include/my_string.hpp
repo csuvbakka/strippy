@@ -25,13 +25,18 @@ public:
     using iterator = typename buffer_type::iterator;
     using const_iterator = typename buffer_type::const_iterator;
 
-    const_iterator begin() const { return begin_; }
-    const_iterator end() const { return end_; }
+    iterator begin() const { return begin_; }
+    iterator end() const { return end_; }
+    const_iterator cbegin() const { return begin_; }
+    const_iterator cend() const { return end_; }
 
     void clear() { end_ = begin_ = std::begin(buffer_); }
     std::size_t size() const { return std::distance(begin_, end_); }
     bool is_empty() const { return begin_ == end_; }
-    std::string data() const { return std::string(std::begin(buffer_), end()); }
+    std::string data() const
+    {
+        return std::string(std::begin(buffer_), cend());
+    }
 
     bool operator==(const MyStringBuffer& rhs) const
     {
@@ -45,13 +50,13 @@ public:
             throw std::out_of_range("MyStringBuffer operator+=");
 
         std::memcpy(end_, str, str_length);
-        std::advance(end_, str_length);
+        end_ += str_length;
 
         return *this;
     }
     std::string str() const { return std::string(begin_, end_); }
 
-    void erase_head(std::size_t len) { std::advance(begin_, len); }
+    void erase_head(std::size_t len) { begin_ += len; }
     void erase_head_until(iterator it) { begin_ = it; }
 
     bool starts_with(const std::string& prefix) const
@@ -118,6 +123,17 @@ public:
 
         return *this;
     }
+    MyString& operator=(MyString&& rhs)
+    {
+        if (buffer_ != rhs.buffer_)
+            throw std::logic_error{
+                "MyString operator= exception: Buffers must be the same!"};
+
+        begin_ = std::move(rhs.begin_);
+        end_ = std::move(rhs.end_);
+
+        return *this;
+    }
 
     const_iterator begin() const { return begin_; }
     const_iterator end() const { return end_; }
@@ -156,14 +172,13 @@ public:
                                     return actual_char != c;
                                 });
         auto it = rit.base();
-        std::advance(it, -1);
-        return it;
+        return --it;
     }
     bool starts_with(char c) const { return *begin_ == c; }
     bool starts_with(const char* str) const
     {
         auto begin = begin_;
-        for (auto i = 0; i < std::strlen(str); ++i, std::advance(begin, 1))
+        for (auto i = 0; i < std::strlen(str); ++i, ++begin)
             if (str[i] != *begin)
                 return false;
 
@@ -176,12 +191,12 @@ public:
     void pop_front()
     {
         if (end_ != begin_)
-            std::advance(begin_, 1);
+            ++begin_;
     }
     void pop_back()
     {
         if (end_ != begin_)
-            std::advance(end_, -1);
+            --end_;
     }
 
     std::size_t length() const { return std::distance(begin_, end_); }
@@ -213,6 +228,12 @@ public:
         else
             return std::make_tuple(MyString(buffer_, begin_, it),
                                    MyString(buffer_, std::next(it), end_));
+    }
+
+    void erase_tail(size_t len)
+    {
+        if (std::distance(begin_, end_) >= len)
+            end_ -= len;
     }
 
     void ltrim() { begin_ = find_first_not_of("\t "); }

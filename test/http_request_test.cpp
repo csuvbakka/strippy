@@ -373,7 +373,7 @@ TEST(HttpRequestTest, double_crlf_ends_message)
 
     EXPECT_EQ(builder.get_header(HOST), request[HOST]);
     EXPECT_EQ(builder.get_header(REFERER), request[REFERER]);
-    EXPECT_TRUE(request.done_parsing());
+    EXPECT_TRUE(request.is_done());
 }
 
 TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
@@ -386,13 +386,13 @@ TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
 
     buffer += builder.build().c_str();
     request.process_buffer();
-    EXPECT_TRUE(request.done_parsing());
+    EXPECT_TRUE(request.is_done());
 
     builder.header(REFERER, "google.com");
     buffer += builder.build().c_str();
     request.process_buffer();
 
-    EXPECT_TRUE(request.done_parsing());
+    EXPECT_TRUE(request.is_done());
     EXPECT_EQ("", request[REFERER]);
 }
 
@@ -413,7 +413,7 @@ TEST(HttpRequestTest, request_with_data)
     buffer += "alma";
     request.process_buffer();
 
-    EXPECT_TRUE(request.done_parsing());
-    EXPECT_EQ("", request[REFERER]);
+    EXPECT_TRUE(request.is_done());
+    EXPECT_EQ("127.0.0.1", request[REFERER]);
     EXPECT_EQ("alma", request.content());
 }
