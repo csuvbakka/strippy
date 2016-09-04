@@ -254,6 +254,11 @@ public:
                                    MyString(buffer_, std::next(it), end_));
     }
 
+    void erase_head(size_t len)
+    {
+        if (std::distance(begin_, end_) >= len)
+            start_ += len;
+    }
     void erase_tail(size_t len)
     {
         if (std::distance(begin_, end_) >= len)

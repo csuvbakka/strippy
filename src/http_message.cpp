@@ -16,7 +16,7 @@ void strip_cr(mystr::MyString& str)
 namespace http
 {
 Message::Message(int socket_fd)
-    : receive_buffer_(socket_fd, buffer_)
+    : receiver_(socket_fd)
     , parse_state_(ParseState::PARSING)
 {
 }
@@ -24,13 +24,16 @@ void Message::receive()
 {
     receive_start_line();
     receive_headers();
-    // receive_content();
 }
 
 void Message::receive_start_line()
 {
-    start_line_ = readline();
-    // std::cout << start_line_.str() << std::endl;
+    do
+    {
+        start_line_ = readline();
+        while (start_line_.starts_with("\r\n"))
+            start_line_.erase_head(2);
+    } while (!start_line_.is_empty());
 }
 
 void Message::receive_headers()
@@ -39,7 +42,6 @@ void Message::receive_headers()
     do
     {
         line = readline();
-        // std::cout << line.str() << std::endl;
         std::tie(header, header_data) = line.split_first(':');
         if (!header.is_empty() && !header_data.is_empty())
             headers_[header.str()] = trim_copy(header_data).str();
@@ -47,31 +49,19 @@ void Message::receive_headers()
     parse_state_ = ParseState::DONE;
 }
 
-void Message::receive_content()
-{
-    static const std::string ContentLength = "Content-Length";
-    auto length = headers_[ContentLength];
-    if (!length.empty())
-    {
-        content_length_ = std::stoi(length);
-
-        // remove remainder from buffer_
-        // read content
-    }
-}
-
 Message::string_view Message::readline()
 {
     auto it = buffer_.find('\n');
     while (it == buffer_.end())
     {
-        receive_buffer_.receive();
+        receiver_.receive(buffer_);
         it = buffer_.find('\n');
     }
 
     auto line = string_view(buffer_, buffer_.begin(), it);
-    buffer_.erase_head_until(std::next(it));
     strip_cr(line);
+
+    buffer_.erase_head_until(std::next(it));
     return line;
 }
 

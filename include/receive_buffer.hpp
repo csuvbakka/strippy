@@ -9,17 +9,15 @@ namespace util
 {
 namespace socket
 {
-template <typename buffer_to_hold_data, int receive_buffer_size>
-class ReceiveBuffer
+template <typename buffer_to_hold_data, int receive_buffer_size> class Receiver
 {
 
 public:
-    ReceiveBuffer(int socket_fd, buffer_to_hold_data& buffer)
+    Receiver(int socket_fd)
         : socket_fd_(socket_fd)
-        , buffer_(buffer)
     {
     }
-    ssize_t receive()
+    ssize_t receive(buffer_to_hold_data& buffer)
     {
         ssize_t bytes;
         do
@@ -28,18 +26,16 @@ public:
                            MSG_DONTWAIT);
         } while (bytes < 0);
 
-        buffer_.append(recv_buffer_, bytes);
+        buffer.append(recv_buffer_, bytes);
 
-        std::cout << buffer_.str() << std::endl;
+        std::cout << buffer.str() << std::endl;
 
         return bytes;
     }
 
-    buffer_to_hold_data& buffer() { return buffer_; }
 private:
     int socket_fd_;
     char recv_buffer_[receive_buffer_size];
-    buffer_to_hold_data buffer_;
 };
 }
 }
