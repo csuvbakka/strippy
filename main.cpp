@@ -18,7 +18,7 @@
 #include <string_utils.hpp>
 #include <http_helpers.hpp>
 #include <http_message.hpp>
-#include <valami.hpp>
+#include <buffer_reader.hpp>
 #include <receive_buffer.hpp>
 
 namespace
