@@ -5,6 +5,12 @@
 namespace mystr
 {
 
+const MyStringBuffer& empty_buffer()
+{
+    static MyStringBuffer empty_string_buffer;
+    return empty_string_buffer;
+}
+
 MyString ltrim_copy(const MyString& str)
 {
     if (str.is_empty())

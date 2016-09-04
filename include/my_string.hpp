@@ -78,6 +78,7 @@ public:
         return std::equal(prefix.begin(), prefix.end(), begin_);
     }
 
+    iterator find(char c) { return std::find(begin_, end_, c); }
     iterator find_first_of(char c) { return std::find(begin_, end_, c); }
 
 private:
@@ -87,11 +88,20 @@ private:
     iterator end_;
 };
 
+const MyStringBuffer& empty_buffer();
+
 class MyString
 {
 public:
     using iterator = typename MyStringBuffer::iterator;
     using const_iterator = typename MyStringBuffer::const_iterator;
+
+    MyString()
+        : buffer_(empty_buffer())
+        , begin_(buffer_.begin())
+        , end_(buffer_.end())
+    {
+    }
 
     MyString(MyStringBuffer& buffer)
         : buffer_(buffer)
@@ -275,14 +285,14 @@ MyString rtrim_copy(const MyString& str);
 MyString trim_copy(const MyString& str);
 }
 
-namespace std
-{
-template <> struct hash<::mystr::MyString>
-{
-    std::size_t operator()(const ::mystr::MyString& key) const
-    {
-        return (std::hash<::mystr::MyString::const_iterator>()(key.begin()) ^
-                std::hash<::mystr::MyString::const_iterator>()(key.end()));
-    }
-};
-}
+// namespace std
+// {
+// template <> struct hash<::mystr::MyString>
+// {
+// std::size_t operator()(const ::mystr::MyString& key) const
+// {
+// return (std::hash<::mystr::MyString::const_iterator>()(key.begin()) ^
+// std::hash<::mystr::MyString::const_iterator>()(key.end()));
+// }
+// };
+// }

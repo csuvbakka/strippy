@@ -17,6 +17,7 @@
 #include <client_socket.hpp>
 #include <string_utils.hpp>
 #include <http_helpers.hpp>
+#include <http_message.hpp>
 
 namespace
 {
@@ -38,76 +39,89 @@ std::string string_to_hex(const std::string& input)
 }
 }
 
+// struct ChildThread
+// {
+// void operator()(int client_fd)
+// {
+// while (1)
+// {
+// mystr::MyStringBuffer buffer;
+// http::Request message(buffer);
+// auto bytes = http::receive_request(client_fd, buffer, message);
+// if (bytes == 0)
+// break;
+
+// std::cout << client_fd << " Victim => Proxy | "
+// << message.request_line() << std::endl;
+
+// const std::string& host = message["Host"];
+// ClientSocket client;
+// if (!client.connect(host, 80))
+// std::cout << "failed to connect" << std::endl;
+// else
+// {
+// // std::cout << "sending to " << host << ": " <<
+// // message.data()
+// // << std::endl;
+// auto sent = util::socket::send(client.sockfd_, message.data());
+// std::cout << client_fd << " Proxy => Host | " << sent
+// << std::endl;
+
+// mystr::MyStringBuffer recv_buffer;
+// http::Request response(recv_buffer);
+// http::receive_request(client.sockfd_, recv_buffer, response);
+// if (response && response.content_length() > 0)
+// {
+// util::socket::send(client_fd, response.data());
+// const auto content_length = response.content_length();
+// const auto buf_len = 1048576;
+// // const auto buf_len = 2048;
+// char buf[buf_len] = {};
+// std::size_t sum = 0;
+// if (!response.content().empty())
+// sum += response.content().length();
+
+// do
+// {
+// bytes =
+// util::socket::recvv(client.sockfd_, buf, buf_len);
+// if (bytes > 0)
+// {
+
+// std::cout << client_fd << " Proxy <= Host | ";
+// std::cout << bytes << std::endl;
+// sent = util::socket::send(client_fd, buf, bytes);
+// std::cout << client_fd << "Victim <= Proxy | "
+// << sent << std::endl;
+// sum += sent;
+// }
+// std::this_thread::sleep_for(
+// std::chrono::milliseconds(1));
+// } while (bytes != 0 && !(sum >= content_length));
+// }
+// }
+
+// if (message["Connection"] == "close")
+// break;
+
+// std::this_thread::sleep_for(std::chrono::milliseconds(1));
+// }
+
+// std::cout << client_fd << " Closing " << std::endl;
+// close(client_fd);
+// }
+// };
 struct ChildThread
 {
     void operator()(int client_fd)
     {
         while (1)
         {
-            mystr::MyStringBuffer buffer;
-            http::Request message(buffer);
-            auto bytes = http::receive_request(client_fd, buffer, message);
-            if (bytes == 0)
+            http::Message message(client_fd);
+            message.receive();
+            if (message)
                 break;
-
-            std::cout << client_fd << " Victim => Proxy | "
-                      << message.request_line() << std::endl;
-
-            const std::string& host = message["Host"];
-            ClientSocket client;
-            if (!client.connect(host, 80))
-                std::cout << "failed to connect" << std::endl;
-            else
-            {
-                // std::cout << "sending to " << host << ": " <<
-                // message.data()
-                // << std::endl;
-                auto sent = util::socket::send(client.sockfd_, message.data());
-                std::cout << client_fd << " Proxy => Host | " << sent
-                          << std::endl;
-
-                mystr::MyStringBuffer recv_buffer;
-                http::Request response(recv_buffer);
-                http::receive_request(client.sockfd_, recv_buffer, response);
-                if (response && response.content_length() > 0)
-                {
-                    util::socket::send(client_fd, response.data());
-                    const auto content_length = response.content_length();
-                    const auto buf_len = 1048576;
-                    // const auto buf_len = 2048;
-                    char buf[buf_len] = {};
-                    std::size_t sum = 0;
-                    if (!response.content().empty())
-                        sum += response.content().length();
-
-                    do
-                    {
-                        bytes =
-                            util::socket::recvv(client.sockfd_, buf, buf_len);
-                        if (bytes > 0)
-                        {
-
-                            std::cout << client_fd << " Proxy <= Host | ";
-                            std::cout << bytes << std::endl;
-                            sent = util::socket::send(client_fd, buf, bytes);
-                            std::cout << client_fd << "Victim <= Proxy | "
-                                      << sent << std::endl;
-                            sum += sent;
-                        }
-                        std::this_thread::sleep_for(
-                            std::chrono::milliseconds(1));
-                    } while (bytes != 0 && !(sum >= content_length));
-                }
-            }
-
-            if (message["Connection"] == "close")
-                break;
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-
-        std::cout << client_fd << " Closing " << std::endl;
-        close(client_fd);
     }
 };
 
