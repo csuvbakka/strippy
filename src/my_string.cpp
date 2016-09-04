@@ -1,40 +1,25 @@
 #include <my_string.hpp>
 
-#include <iostream>
-
-namespace mystr
+namespace str
 {
 
-const MyStringBuffer& empty_buffer()
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const string_view<T>& str)
 {
-    static MyStringBuffer empty_string_buffer;
+    os << str;
+    return os;
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os,
+                         const string_view<character_array>& str)
+{
+    os << str.str();
+    return os;
+}
+const character_array& empty_buffer()
+{
+    static character_array empty_string_buffer;
     return empty_string_buffer;
-}
-
-MyString ltrim_copy(const MyString& str)
-{
-    if (str.is_empty())
-        return MyString{str};
-
-    return str.substr(str.find_first_not(' '));
-}
-
-MyString rtrim_copy(const MyString& str)
-{
-    if (str.is_empty())
-        return MyString{str};
-
-    MyString copy(str);
-    copy.rtrim();
-    return copy;
-}
-MyString trim_copy(const MyString& str)
-{
-    if (str.is_empty())
-        return MyString{str};
-
-    MyString copy(str);
-    copy.trim();
-    return copy;
 }
 }

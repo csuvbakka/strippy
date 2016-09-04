@@ -18,6 +18,8 @@
 #include <string_utils.hpp>
 #include <http_helpers.hpp>
 #include <http_message.hpp>
+#include <valami.hpp>
+#include <receive_buffer.hpp>
 
 namespace
 {
@@ -45,7 +47,7 @@ std::string string_to_hex(const std::string& input)
 // {
 // while (1)
 // {
-// mystr::MyStringBuffer buffer;
+// str::character_array buffer;
 // http::Request message(buffer);
 // auto bytes = http::receive_request(client_fd, buffer, message);
 // if (bytes == 0)
@@ -67,7 +69,7 @@ std::string string_to_hex(const std::string& input)
 // std::cout << client_fd << " Proxy => Host | " << sent
 // << std::endl;
 
-// mystr::MyStringBuffer recv_buffer;
+// str::character_array recv_buffer;
 // http::Request response(recv_buffer);
 // http::receive_request(client.sockfd_, recv_buffer, response);
 // if (response && response.content_length() > 0)
@@ -117,7 +119,13 @@ struct ChildThread
     {
         while (1)
         {
-            http::Message message(client_fd);
+            // using string_buffer = str::character_array;
+            using string_buffer = std::string;
+            using receiver = util::socket::Receiver<string_buffer, 1024>;
+            using buffer_reader = str::BufferReader<receiver>;
+
+            buffer_reader valami(client_fd);
+            http::Message<buffer_reader> message(valami);
             message.receive();
             if (message)
                 break;

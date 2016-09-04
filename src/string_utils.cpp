@@ -1,9 +1,8 @@
 #include <string_utils.hpp>
 
-namespace util
+namespace str
 {
-namespace string
-{
+
 bool starts_with(const std::string& str, char c)
 {
     return str.front() == c;
@@ -112,6 +111,5 @@ std::string rtrim(const std::string& str)
 std::string trim(const std::string& str)
 {
     return (rtrim(ltrim(str)));
-}
 }
 }

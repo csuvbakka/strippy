@@ -4,11 +4,22 @@
 #include <vector>
 #include <sstream>
 #include <tuple>
+#include <my_string.hpp>
 
-namespace util
+namespace str
 {
-namespace string
+template <typename String>
+void erase_head_until(String& str, typename String::iterator it)
 {
+    str.erase(std::begin(str), it);
+}
+
+template <>
+void erase_head_until(character_array& str, character_array::iterator it)
+{
+    str.erase_head_until(it);
+}
+
 bool starts_with(const std::string& str, char c);
 bool starts_with(const std::string& str, const std::string& prefix);
 bool starts_with_whitespace(const std::string& str);
@@ -31,5 +42,4 @@ std::tuple<std::string, std::string> split_first(const std::string& s,
 std::string ltrim(const std::string& str);
 std::string rtrim(const std::string& str);
 std::string trim(const std::string& str);
-}
 }

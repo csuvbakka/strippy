@@ -17,7 +17,7 @@ enum class RequestType
 
 class Request
 {
-    using string_view = mystr::MyString;
+    using string_view = str::string_view<str::character_array>;
     enum class ParseState
     {
         NOT_STARTED,
@@ -29,7 +29,7 @@ class Request
     };
 
 public:
-    Request(mystr::MyStringBuffer& buffer);
+    Request(str::character_array& buffer);
     ~Request() = default;
     Request(const Request&) = delete;
     Request(Request&&) = default;
@@ -56,7 +56,7 @@ private:
 private:
     RequestType request_type_;
     ParseState parse_state_;
-    mystr::MyStringBuffer& buffer_;
+    str::character_array& buffer_;
     string_view request_line_;
     string_view content_;
     std::size_t content_length_;

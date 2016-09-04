@@ -10,14 +10,14 @@
 
 #include <iostream>
 
-namespace mystr
+namespace str
 {
 using buffer_type = std::array<char, 8192>;
 
-class MyStringBuffer
+class character_array
 {
 public:
-    MyStringBuffer()
+    character_array()
         : begin_(buffer_.begin())
         , end_(buffer_.begin())
     {
@@ -30,26 +30,38 @@ public:
     const_iterator cbegin() const { return begin_; }
     const_iterator cend() const { return end_; }
 
-    void clear() { end_ = begin_ = std::begin(buffer_); }
     std::size_t size() const { return std::distance(begin_, end_); }
-    bool is_empty() const { return begin_ == end_; }
+    std::size_t length() const { return size(); }
+    std::size_t max_size() const { return buffer_.max_size(); }
+    std::size_t capacity() const { return max_size(); }
+
+    void clear() { end_ = begin_ = std::begin(buffer_); }
+    bool empty() const { return begin_ == end_; }
+
+    char& operator[](size_t pos) { return buffer_[pos]; }
+    char front() { return *begin_; }
+    char back() { return *std::next(end_, -1); }
+
     std::string data() const
     {
         return std::string(std::begin(buffer_), cend());
     }
 
-    bool operator==(const MyStringBuffer& rhs) const
+    bool operator==(const character_array& rhs) const
     {
         return buffer_ == rhs.buffer_;
     }
-    bool operator!=(const MyStringBuffer& rhs) const { return !(*this == rhs); }
+    bool operator!=(const character_array& rhs) const
+    {
+        return !(*this == rhs);
+    }
 
     void append(const char* str, std::size_t len)
     {
         if (len > 0)
         {
             if (size() + len > buffer_.max_size())
-                throw std::out_of_range("MyStringBuffer operator+=");
+                throw std::out_of_range("character_array operator+=");
 
             std::memcpy(end_, str, len);
             end_ += len;
@@ -57,11 +69,20 @@ public:
             std::cout << "size after append: " << size() << std::endl;
         }
     }
-    MyStringBuffer& operator+=(const char* str)
+    void push_back(char c)
+    {
+        if (size() == max_size())
+            throw std::out_of_range("character_array push_back");
+
+        *end_++ = c;
+    }
+    void pop_back() { --end_; }
+
+    character_array& operator+=(const char* str)
     {
         auto str_length = std::strlen(str);
         if (size() + str_length > buffer_.max_size())
-            throw std::out_of_range("MyStringBuffer operator+=");
+            throw std::out_of_range("character_array operator+=");
 
         std::memcpy(end_, str, str_length);
         end_ += str_length;
@@ -79,7 +100,6 @@ public:
     }
 
     iterator find(char c) { return std::find(begin_, end_, c); }
-    iterator find_first_of(char c) { return std::find(begin_, end_, c); }
 
 private:
 private:
@@ -88,70 +108,74 @@ private:
     iterator end_;
 };
 
-const MyStringBuffer& empty_buffer();
+template <typename T> const T& empty_buffer()
+{
+    static T empty_string_buffer;
+    return empty_string_buffer;
+}
 
-class MyString
+template <typename string_type> class string_view
 {
 public:
-    using iterator = typename MyStringBuffer::iterator;
-    using const_iterator = typename MyStringBuffer::const_iterator;
+    using iterator = typename string_type::iterator;
+    using const_iterator = typename string_type::const_iterator;
 
-    MyString()
-        : buffer_(empty_buffer())
-        , begin_(buffer_.begin())
-        , end_(buffer_.end())
+    string_view()
+        : string_(empty_buffer<string_type>())
+        , begin_(string_.begin())
+        , end_(string_.end())
     {
     }
 
-    MyString(MyStringBuffer& buffer)
-        : buffer_(buffer)
+    string_view(string_type& buffer)
+        : string_(buffer)
         , begin_(buffer.begin())
-        , end_(buffer.begin())
+        , end_(buffer.end())
     {
     }
-    MyString(const MyStringBuffer& buffer, const_iterator begin,
-             const_iterator end)
-        : buffer_(buffer)
+    string_view(const string_type& buffer, const_iterator begin,
+                const_iterator end)
+        : string_(buffer)
         , begin_(begin)
         , end_(end)
     {
     }
-    MyString(const MyString& other)
-        : buffer_(other.buffer_)
+    string_view(const string_view& other)
+        : string_(other.string_)
         , begin_(other.begin_)
         , end_(other.end_)
     {
     }
-    MyString(MyString&& other)
-        : buffer_(other.buffer_)
+    string_view(string_view&& other)
+        : string_(other.string_)
         , begin_(std::move(other.begin_))
         , end_(std::move(other.end_))
     {
     }
 
-    bool operator==(const MyString& rhs) const
+    bool operator==(const string_view& rhs) const
     {
         return (begin_ == rhs.begin_ && end_ == rhs.end_);
     }
-    MyString& operator=(const MyString& rhs)
+    string_view& operator=(const string_view& rhs)
     {
         if (*this == rhs)
             return *this;
 
-        if (buffer_ != rhs.buffer_)
-            throw std::logic_error{
-                "MyString operator= exception: Buffers must be the same!"};
+        // if (string_ != rhs.string_)
+        // throw std::logic_error{
+        // "string_view operator= exception: Buffers must be the same!"};
 
         begin_ = rhs.begin_;
         end_ = rhs.end_;
 
         return *this;
     }
-    MyString& operator=(MyString&& rhs)
+    string_view& operator=(string_view&& rhs)
     {
-        if (buffer_ != rhs.buffer_)
-            throw std::logic_error{
-                "MyString operator= exception: Buffers must be the same!"};
+        // if (string_ != rhs.string_)
+        // throw std::logic_error{
+        // "string_view operator= exception: Buffers must be the same!"};
 
         begin_ = std::move(rhs.begin_);
         end_ = std::move(rhs.end_);
@@ -186,7 +210,7 @@ public:
     }
     const_iterator find_last_not(char c) const
     {
-        if (is_empty())
+        if (empty())
             return end_;
 
         auto rit = std::find_if(std::make_reverse_iterator(end_),
@@ -209,55 +233,48 @@ public:
         return true;
     }
 
-    char front() { return *begin_; }
-    char back() { return *std::next(end_, -1); }
+    char front() const { return *begin_; }
+    char back() const { return *std::next(end_, -1); }
 
-    void pop_front()
-    {
-        if (end_ != begin_)
-            ++begin_;
-    }
-    void pop_back()
-    {
-        if (end_ != begin_)
-            --end_;
-    }
+    void pop_front() { ++begin_; }
+    void pop_back() { --end_; }
 
-    std::size_t length() const { return std::distance(begin_, end_); }
-    bool is_empty() const { return begin_ == end_; }
+    std::size_t size() const { return std::distance(begin_, end_); }
+    std::size_t length() const { return size(); }
+    bool empty() const { return begin_ == end_; }
 
-    MyString substr(std::size_t pos) const
+    string_view substr(std::size_t pos) const
     {
         if (length() < pos)
-            throw std::out_of_range{"MyString substr"};
+            throw std::out_of_range{"string_view substr"};
         else if (length() == pos)
-            return MyString{buffer_, begin_, begin_};
+            return string_view{string_, begin_, begin_};
         else
-            return MyString{buffer_, std::next(begin_, pos), end_};
+            return string_view{string_, std::next(begin_, pos), end_};
     }
-    MyString substr(const_iterator begin) const
+    string_view substr(const_iterator begin) const
     {
-        return MyString(buffer_, begin, end_);
+        return string_view(string_, begin, end_);
     }
 
-    std::tuple<MyString, MyString> split_first(char c)
+    std::tuple<string_view, string_view> split_first(char c)
     {
         auto it = find(c);
         if (it == end_)
-            return std::make_tuple(MyString(buffer_, begin_, end_),
-                                   MyString(buffer_, end_, end_));
+            return std::make_tuple(string_view(string_, begin_, end_),
+                                   string_view(string_, end_, end_));
         else if (std::next(it) == end_)
-            return std::make_tuple(MyString(buffer_, begin_, it),
-                                   MyString(buffer_, end_, end_));
+            return std::make_tuple(string_view(string_, begin_, it),
+                                   string_view(string_, end_, end_));
         else
-            return std::make_tuple(MyString(buffer_, begin_, it),
-                                   MyString(buffer_, std::next(it), end_));
+            return std::make_tuple(string_view(string_, begin_, it),
+                                   string_view(string_, std::next(it), end_));
     }
 
     void erase_head(size_t len)
     {
         if (std::distance(begin_, end_) >= len)
-            start_ += len;
+            begin_ += len;
     }
     void erase_tail(size_t len)
     {
@@ -280,24 +297,42 @@ public:
     }
 
 private:
-    const MyStringBuffer& buffer_;
+    const string_type& string_;
     const_iterator begin_;
     const_iterator end_;
 };
 
-MyString ltrim_copy(const MyString& str);
-MyString rtrim_copy(const MyString& str);
-MyString trim_copy(const MyString& str);
-}
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const string_view<T>& str);
 
-// namespace std
-// {
-// template <> struct hash<::mystr::MyString>
-// {
-// std::size_t operator()(const ::mystr::MyString& key) const
-// {
-// return (std::hash<::mystr::MyString::const_iterator>()(key.begin()) ^
-// std::hash<::mystr::MyString::const_iterator>()(key.end()));
-// }
-// };
-// }
+template <>
+std::ostream& operator<<(std::ostream& os,
+                         const string_view<character_array>& str);
+
+template <typename T> string_view<T> ltrim_copy(const string_view<T>& str)
+{
+    if (str.empty())
+        return {str};
+
+    return str.substr(str.find_first_not(' '));
+}
+template <typename T> string_view<T> rtrim_copy(const string_view<T>& str)
+{
+    if (str.empty())
+        return {str};
+
+    string_view<T> copy(str);
+    copy.rtrim();
+    return copy;
+}
+template <typename T> string_view<T> trim_copy(const string_view<T>& str)
+{
+
+    if (str.empty())
+        return {str};
+
+    string_view<T> copy(str);
+    copy.trim();
+    return copy;
+}
+}

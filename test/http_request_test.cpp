@@ -74,7 +74,7 @@ RequestStringBuilder& operator>>(RequestStringBuilder& lhs,
 
 TEST(HttpRequestTest, first_line_is_the_request_line)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     RequestStringBuilder builder;
     builder.request_line(REQUEST_LINE);
@@ -87,7 +87,7 @@ TEST(HttpRequestTest, first_line_is_the_request_line)
 
 TEST(HttpRequestTest, parse_request_line_in_multiple_chunks)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     RequestStringBuilder builder;
 
@@ -108,7 +108,7 @@ TEST(HttpRequestTest, parse_request_line_in_multiple_chunks)
 
 TEST(HttpRequestTest, ignore_empty_lines_before_request_line)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     RequestStringBuilder builder;
     builder.request_line(REQUEST_LINE);
@@ -123,7 +123,7 @@ TEST(HttpRequestTest, ignore_empty_lines_before_request_line)
 
 TEST(HttpRequestTest, parse_one_header)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     RequestStringBuilder builder;
 
@@ -137,7 +137,7 @@ TEST(HttpRequestTest, parse_one_header)
 
 TEST(HttpRequestTest, parse_one_header_in_chunks)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
@@ -155,7 +155,7 @@ TEST(HttpRequestTest, parse_one_header_in_chunks)
 
 TEST(HttpRequestTest, parse_two_headers)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
@@ -192,7 +192,7 @@ TEST(HttpRequestTest, parse_two_headers)
 
 TEST(HttpRequestTest, parse_two_headers_with_newline_in_between)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
@@ -233,7 +233,7 @@ TEST(HttpRequestTest, parse_two_headers_with_newline_in_between)
 
 TEST(HttpRequestTest, parse_two_headers_small_chunks)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ": " + host_data;
@@ -264,7 +264,7 @@ TEST(HttpRequestTest, parse_two_headers_small_chunks)
 
 TEST(HttpRequestTest, any_number_of_spaces_between_colon_and_value)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     std::string host_data = "127.0.0.1";
     std::string host_header = HOST + ":   " + host_data;
@@ -296,7 +296,7 @@ TEST(HttpRequestTest, any_number_of_spaces_between_colon_and_value)
 TEST(HttpRequestTest,
      header_lines_starting_with_whitespace_are_part_of_the_previous_header_line)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     std::string referer_data_first_line =
         "http://en.wikipedia.org/wiki/Main_Page";
@@ -360,7 +360,7 @@ TEST(HttpRequestTest,
 
 TEST(HttpRequestTest, double_crlf_ends_message)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     RequestStringBuilder builder;
 
@@ -378,7 +378,7 @@ TEST(HttpRequestTest, double_crlf_ends_message)
 
 TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     http::Request request(buffer);
     RequestStringBuilder builder;
 
@@ -398,7 +398,7 @@ TEST(HttpRequestTest, nothing_is_parsed_after_double_crlf)
 
 // TEST(HttpRequestTest, request_with_data)
 // {
-// mystr::MyStringBuffer buffer;
+// str::character_array buffer;
 // http::Request request(buffer);
 // RequestStringBuilder builder;
 

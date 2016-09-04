@@ -1,26 +1,30 @@
 #include <gtest/gtest.h>
 #include <my_string.hpp>
 #include <algorithm>
+#include <string>
+
+using char_array_view = str::string_view<str::character_array>;
+using std_string_view = str::string_view<std::string>;
 
 namespace
 {
-mystr::MyStringBuffer new_buffer(const std::string& str)
+str::character_array new_buffer(const std::string& str)
 {
-    mystr::MyStringBuffer output;
+    str::character_array output;
     output += str.c_str();
     return output;
 }
 
-mystr::MyString mystring_from_buffer(const mystr::MyStringBuffer& buffer)
+char_array_view mystring_from_buffer(const str::character_array& buffer)
 {
     auto end_pos = std::find(buffer.begin(), buffer.end(), '\0');
-    return mystr::MyString(buffer, buffer.begin(), end_pos);
+    return char_array_view(buffer, buffer.begin(), end_pos);
 }
 }
 
-TEST(MyStringBuffer, append_string)
+TEST(character_array, append_string)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     buffer += "alma";
     EXPECT_EQ("alma", buffer.str());
@@ -29,9 +33,9 @@ TEST(MyStringBuffer, append_string)
     EXPECT_EQ("almabanan", buffer.str());
 }
 
-TEST(MyStringBuffer, append_const_char_p)
+TEST(character_array, append_const_char_p)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     buffer += "alma";
     EXPECT_EQ("alma", buffer.str());
@@ -40,9 +44,9 @@ TEST(MyStringBuffer, append_const_char_p)
     EXPECT_EQ("almabanan", buffer.str());
 }
 
-TEST(MyStringBuffer, append_char_array)
+TEST(character_array, append_char_array)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
     char to_append[200] = {};
 
     const char* str = "alma";
@@ -57,18 +61,77 @@ TEST(MyStringBuffer, append_char_array)
     EXPECT_EQ("almabanan", buffer.str());
 }
 
-TEST(MyStringBuffer, data)
+TEST(character_array, push_back)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
+
+    buffer += "alma";
+    EXPECT_EQ("alma", buffer.str());
+
+    buffer.pop_back();
+    EXPECT_EQ("alm", buffer.str());
+    buffer.pop_back();
+    EXPECT_EQ("al", buffer.str());
+    buffer.pop_back();
+    EXPECT_EQ("a", buffer.str());
+    buffer.pop_back();
+    EXPECT_TRUE(buffer.empty());
+}
+
+TEST(character_array, pop_back)
+{
+    str::character_array buffer;
+
+    buffer.push_back('a');
+    EXPECT_EQ("a", buffer.str());
+    buffer.push_back('l');
+    EXPECT_EQ("al", buffer.str());
+    buffer.push_back('m');
+    EXPECT_EQ("alm", buffer.str());
+    buffer.push_back('a');
+    EXPECT_EQ("alma", buffer.str());
+}
+
+TEST(character_array, data)
+{
+    str::character_array buffer;
     std::string str = "alma";
 
     buffer += str.c_str();
     EXPECT_EQ(str, buffer.data());
 }
 
-TEST(MyStringBuffer, length)
+TEST(character_array, operator_square_brackets)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
+    std::string str = "alma";
+
+    buffer += str.c_str();
+    for (auto i = 0; i < str.length(); ++i)
+        EXPECT_EQ(str[i], buffer[i]);
+}
+
+TEST(character_array, front)
+{
+    str::character_array buffer;
+    std::string str = "alma";
+
+    buffer += str.c_str();
+    EXPECT_EQ(str.front(), buffer.front());
+}
+
+TEST(character_array, back)
+{
+    str::character_array buffer;
+    std::string str = "alma";
+
+    buffer += str.c_str();
+    EXPECT_EQ(str.back(), buffer.back());
+}
+
+TEST(character_array, length)
+{
+    str::character_array buffer;
     std::string str = "alma";
 
     buffer += str.c_str();
@@ -76,21 +139,21 @@ TEST(MyStringBuffer, length)
     EXPECT_EQ(str.length(), buffer.size());
 }
 
-TEST(MyStringBuffer, clear)
+TEST(character_array, clear)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     buffer += "alma";
     EXPECT_EQ("alma", buffer.str());
 
     buffer.clear();
-    EXPECT_TRUE(buffer.is_empty());
+    EXPECT_TRUE(buffer.empty());
     EXPECT_EQ("", buffer.str());
 }
 
-TEST(MyStringBuffer, starts_with)
+TEST(character_array, starts_with)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     buffer += "alma";
     EXPECT_EQ("alma", buffer.str());
@@ -103,34 +166,34 @@ TEST(MyStringBuffer, starts_with)
     EXPECT_FALSE(buffer.starts_with("banan"));
 }
 
-TEST(MyStringBuffer, find_first_of)
+TEST(character_array, find)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     buffer += "alma";
 
-    auto it = buffer.find_first_of('m');
+    auto it = buffer.find('m');
     EXPECT_EQ(*it, 'm');
 }
 
-TEST(MyStringBuffer, find_first_of_not_found_return_end_iterator)
+TEST(character_array, find_first_of_not_found_return_end_iterator)
 {
-    mystr::MyStringBuffer buffer;
+    str::character_array buffer;
 
     buffer += "alma";
 
-    auto it = buffer.find_first_of('x');
+    auto it = buffer.find('x');
     EXPECT_EQ(it, buffer.end());
 }
 
-TEST(MyString, constructor)
+TEST(string_view, constructor)
 {
     auto buffer = new_buffer("alma");
     auto mystring = mystring_from_buffer(buffer);
     EXPECT_EQ("alma", mystring.str());
 }
 
-TEST(MyString, length)
+TEST(string_view, length)
 {
     std::string str = "alma";
     auto buffer = new_buffer(str);
@@ -138,7 +201,7 @@ TEST(MyString, length)
     EXPECT_EQ(str.length(), mystring.length());
 }
 
-TEST(MyString, find_character)
+TEST(string_view, find_character)
 {
     auto haystack = new_buffer("Far far away in a galaxy");
     char needle = 'x';
@@ -148,7 +211,7 @@ TEST(MyString, find_character)
     EXPECT_EQ(*it, needle);
 }
 
-TEST(MyString, find_first_not)
+TEST(string_view, find_first_not)
 {
     auto haystack = new_buffer("aaaxaaxaaax");
     char needle = 'a';
@@ -159,7 +222,7 @@ TEST(MyString, find_first_not)
     EXPECT_EQ(3, std::distance(mystring.begin(), it));
 }
 
-TEST(MyString, find_first_not_needle_not_in_haystack_finds_begin)
+TEST(string_view, find_first_not_needle_not_in_haystack_finds_begin)
 {
     auto haystack = new_buffer("aaaxaaxaaax");
     char needle = 'c';
@@ -169,7 +232,7 @@ TEST(MyString, find_first_not_needle_not_in_haystack_finds_begin)
     EXPECT_EQ(it, mystring.begin());
 }
 
-TEST(MyString, find_first_not_empty_string_finds_end)
+TEST(string_view, find_first_not_empty_string_finds_end)
 {
     auto haystack = new_buffer("");
     char needle = 'c';
@@ -179,7 +242,7 @@ TEST(MyString, find_first_not_empty_string_finds_end)
     EXPECT_EQ(it, mystring.end());
 }
 
-TEST(MyString, find_first_not_of)
+TEST(string_view, find_first_not_of)
 {
     auto haystack = new_buffer("abcbccbaXabcab");
     std::string not_of = "abc";
@@ -189,7 +252,7 @@ TEST(MyString, find_first_not_of)
     EXPECT_EQ(*it, 'X');
 }
 
-TEST(MyString, find_first_not_of_all_of_returns_end)
+TEST(string_view, find_first_not_of_all_of_returns_end)
 {
     auto haystack = new_buffer("abcbccbaabcab");
     std::string not_of = "abc";
@@ -199,7 +262,7 @@ TEST(MyString, find_first_not_of_all_of_returns_end)
     EXPECT_EQ(it, mystring.end());
 }
 
-TEST(MyString, find_last_not)
+TEST(string_view, find_last_not)
 {
     auto haystack = new_buffer("aaaxaaxaaa");
     char needle = 'a';
@@ -211,7 +274,7 @@ TEST(MyString, find_last_not)
     EXPECT_EQ(6, std::distance(mystring.begin(), it));
 }
 
-TEST(MyString, find_last_not_empty_string_finds_end)
+TEST(string_view, find_last_not_empty_string_finds_end)
 {
     auto haystack = new_buffer("");
     char needle = 'a';
@@ -221,7 +284,7 @@ TEST(MyString, find_last_not_empty_string_finds_end)
     EXPECT_EQ(it, mystring.end());
 }
 
-TEST(MyString, find_last_not_needle_is_first_character_finds_begin)
+TEST(string_view, find_last_not_needle_is_first_character_finds_begin)
 {
     auto haystack = new_buffer("axxxxxxxxx");
     char needle = 'x';
@@ -231,16 +294,16 @@ TEST(MyString, find_last_not_needle_is_first_character_finds_begin)
     EXPECT_EQ(it, mystring.begin());
 }
 
-TEST(MyString, string_copy)
+TEST(string_view, string_copy)
 {
     auto buffer = new_buffer("alma");
 
     auto mystring = mystring_from_buffer(buffer);
-    mystr::MyString other(mystring);
+    char_array_view other(mystring);
     EXPECT_EQ(mystring.str(), other.str());
 }
 
-TEST(MyString, string_starts_with)
+TEST(string_view, string_starts_with)
 {
     auto buffer = new_buffer("alma");
 
@@ -252,7 +315,7 @@ TEST(MyString, string_starts_with)
     EXPECT_FALSE(mystring.starts_with("b"));
 }
 
-TEST(MyString, pop_front)
+TEST(string_view, pop_front)
 {
     auto buffer = new_buffer("alma");
 
@@ -265,12 +328,10 @@ TEST(MyString, pop_front)
     mystring.pop_front();
     EXPECT_EQ("a", mystring.str());
     mystring.pop_front();
-    EXPECT_EQ("", mystring.str());
-    mystring.pop_front();
-    EXPECT_EQ("", mystring.str());
+    EXPECT_TRUE(mystring.empty());
 }
 
-TEST(MyString, pop_back)
+TEST(string_view, pop_back)
 {
     auto buffer = new_buffer("alma");
 
@@ -283,12 +344,10 @@ TEST(MyString, pop_back)
     mystring.pop_back();
     EXPECT_EQ("a", mystring.str());
     mystring.pop_back();
-    EXPECT_EQ("", mystring.str());
-    mystring.pop_back();
-    EXPECT_EQ("", mystring.str());
+    EXPECT_TRUE(mystring.empty());
 }
 
-TEST(MyString, substring_pos_only)
+TEST(string_view, substring_pos_only)
 {
     auto buffer = new_buffer("LongString");
 
@@ -298,7 +357,7 @@ TEST(MyString, substring_pos_only)
     EXPECT_EQ("String", substring.str());
 }
 
-TEST(MyString, substring_pos_only_pos_equals_end_returns_empty_string)
+TEST(string_view, substring_pos_only_pos_equals_end_returns_empty_string)
 {
     std::string str = "LongString";
     auto buffer = new_buffer(str);
@@ -309,7 +368,7 @@ TEST(MyString, substring_pos_only_pos_equals_end_returns_empty_string)
     EXPECT_EQ("", substring.str());
 }
 
-TEST(MyString, substring_pos_only_out_of_bounds_throws_std_out_of_range)
+TEST(string_view, substring_pos_only_out_of_bounds_throws_std_out_of_range)
 {
     auto buffer = new_buffer("LongString");
 
@@ -317,40 +376,40 @@ TEST(MyString, substring_pos_only_out_of_bounds_throws_std_out_of_range)
     EXPECT_THROW(mystring.substr(44), std::out_of_range);
 }
 
-TEST(MyString, split_first)
+TEST(string_view, split_first)
 {
     auto buffer = new_buffer("Long:String");
 
     auto mystring = mystring_from_buffer(buffer);
-    mystr::MyString first{buffer}, second{buffer};
+    char_array_view first{buffer}, second{buffer};
     std::tie(first, second) = mystring.split_first(':');
     EXPECT_EQ("Long", first.str());
     EXPECT_EQ("String", second.str());
 }
 
-TEST(MyString, split_first_separator_is_first_character)
+TEST(string_view, split_first_separator_is_first_character)
 {
     auto buffer = new_buffer(":LongString");
 
     auto mystring = mystring_from_buffer(buffer);
-    mystr::MyString first{buffer}, second{buffer};
+    char_array_view first{buffer}, second{buffer};
     std::tie(first, second) = mystring.split_first(':');
     EXPECT_EQ("", first.str());
     EXPECT_EQ("LongString", second.str());
 }
 
-TEST(MyString, split_first_separator_is_last_character)
+TEST(string_view, split_first_separator_is_last_character)
 {
     auto buffer = new_buffer("LongString:");
 
     auto mystring = mystring_from_buffer(buffer);
-    mystr::MyString first{buffer}, second{buffer};
+    char_array_view first{buffer}, second{buffer};
     std::tie(first, second) = mystring.split_first(':');
     EXPECT_EQ("LongString", first.str());
     EXPECT_EQ("", second.str());
 }
 
-TEST(MyString, ltrim)
+TEST(string_view, ltrim)
 {
     auto buffer = new_buffer("    alma");
 
@@ -359,7 +418,7 @@ TEST(MyString, ltrim)
     EXPECT_EQ("alma", mystring.str());
 }
 
-TEST(MyString, ltrim_empty)
+TEST(string_view, ltrim_empty)
 {
     auto buffer = new_buffer("");
 
@@ -368,7 +427,7 @@ TEST(MyString, ltrim_empty)
     EXPECT_EQ("", mystring.str());
 }
 
-TEST(MyString, ltrim_trims_only_left_side)
+TEST(string_view, ltrim_trims_only_left_side)
 {
     auto buffer = new_buffer("   alma  ");
 
@@ -377,7 +436,7 @@ TEST(MyString, ltrim_trims_only_left_side)
     EXPECT_EQ("alma  ", mystring.str());
 }
 
-TEST(MyString, rtrim)
+TEST(string_view, rtrim)
 {
     auto buffer = new_buffer("alma    ");
 
@@ -386,7 +445,7 @@ TEST(MyString, rtrim)
     EXPECT_EQ("alma", mystring.str());
 }
 
-TEST(MyString, rtrim_empty)
+TEST(string_view, rtrim_empty)
 {
     auto buffer = new_buffer("");
 
@@ -395,7 +454,7 @@ TEST(MyString, rtrim_empty)
     EXPECT_EQ("", mystring.str());
 }
 
-TEST(MyString, rtrim_one_space)
+TEST(string_view, rtrim_one_space)
 {
     auto buffer = new_buffer("alma ");
 
@@ -404,7 +463,7 @@ TEST(MyString, rtrim_one_space)
     EXPECT_EQ("alma", mystring.str());
 }
 
-TEST(MyString, rtrim_trims_only_right_side)
+TEST(string_view, rtrim_trims_only_right_side)
 {
     auto buffer = new_buffer("  alma     ");
 
@@ -413,11 +472,28 @@ TEST(MyString, rtrim_trims_only_right_side)
     EXPECT_EQ("  alma", mystring.str());
 }
 
-TEST(MyString, trim)
+TEST(string_view, trim)
 {
     auto buffer = new_buffer("   alma    ");
 
     auto mystring = mystring_from_buffer(buffer);
+    mystring.trim();
+    EXPECT_EQ("alma", mystring.str());
+}
+
+TEST(string_view, constructor_std_string)
+{
+    std::string alma = "alma";
+    std_string_view mystring(alma);
+
+    EXPECT_EQ(alma, mystring.str());
+}
+
+TEST(string_view, trim_std_string)
+{
+    std::string alma = "   alma  ";
+    std_string_view mystring(alma);
+
     mystring.trim();
     EXPECT_EQ("alma", mystring.str());
 }

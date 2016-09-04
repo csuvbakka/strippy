@@ -7,9 +7,9 @@
 
 namespace
 {
-void strip_cr(mystr::MyString& str)
+void strip_cr(str::string_view<str::character_array>& str)
 {
-    if (!str.is_empty())
+    if (!str.empty())
         if (str.back() == '\r')
             str.pop_back();
 }
@@ -34,7 +34,7 @@ std::string string_to_hex(const std::string& input)
 
 namespace http
 {
-Request::Request(mystr::MyStringBuffer& buffer)
+Request::Request(str::character_array& buffer)
     : parse_state_(ParseState::NOT_STARTED)
     , buffer_(buffer)
     , request_line_(buffer_)
@@ -54,7 +54,7 @@ std::string Request::operator[](const std::string& header_string) const
 
 void Request::process_buffer()
 {
-    if (parse_state_ == ParseState::DONE || buffer_.is_empty())
+    if (parse_state_ == ParseState::DONE || buffer_.empty())
         return;
 
     if (parse_state_ == ParseState::NOT_STARTED)
@@ -65,7 +65,7 @@ void Request::process_buffer()
     }
     // else if (parse_state_ == ParseState::PARSING_CONTENT)
     // {
-    // if (content_.is_empty())
+    // if (content_.empty())
     // content_ = string_view(buffer_, buffer_.begin(), buffer_.end());
     // else
     // content_ = string_view(buffer_, content_.begin(), buffer_.end());
@@ -88,7 +88,7 @@ void Request::process_buffer()
     string_view header(buffer_);
     do
     {
-        auto first_nl_pos = buffer_.find_first_of('\n');
+        auto first_nl_pos = buffer_.find('\n');
         if (first_nl_pos == buffer_.end())
             return;
 
@@ -104,9 +104,9 @@ void Request::process_buffer()
         }
         else if (parse_state_ == ParseState::PARSING_HEADERS)
         {
-            using namespace util::string;
+            using namespace str;
 
-            if (line.is_empty())
+            if (line.empty())
             {
                 static const std::string content_length_str = "Content-Length";
                 std::string l = headers_[content_length_str];
@@ -125,11 +125,11 @@ void Request::process_buffer()
             {
                 string_view header_data(buffer_);
                 std::tie(header, header_data) = line.split_first(':');
-                if (!header.is_empty() && !header_data.is_empty())
+                if (!header.empty() && !header_data.empty())
                     headers_[header.str()] = trim_copy(header_data).str();
             }
         }
-    } while (!buffer_.is_empty());
+    } while (!buffer_.empty());
 }
 
 void Request::add_line_to_multiline_header(const string_view& line,
@@ -137,7 +137,7 @@ void Request::add_line_to_multiline_header(const string_view& line,
 {
     auto non_whitespace_pos = line.find_first_not_of("\t ");
     if (non_whitespace_pos != line.end())
-        if (!header.is_empty())
+        if (!header.empty())
             headers_[header.str()] += line.substr(non_whitespace_pos).str();
 }
 }

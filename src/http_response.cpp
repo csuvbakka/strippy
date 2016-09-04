@@ -12,23 +12,23 @@ Response::Response(const std::string& data)
         return;
 
     std::string headers;
-    std::tie(headers, content_) = util::string::split_first(data, "\r\n\r\n");
+    std::tie(headers, content_) = str::split_first(data, "\r\n\r\n");
 
     // std::cout << "headers" << std::endl;
     // std::cout << headers << std::endl;
     // std::cout << "content" << std::endl;
     // std::cout << content_ << std::endl;
 
-    auto lines = util::string::split(headers, '\n');
+    auto lines = str::split(headers, '\n');
     lines.erase(lines.begin());
 
     std::string header, header_data;
     for (const auto& line : lines)
     {
-        std::tie(header, header_data) = util::string::split_first(line, ':');
+        std::tie(header, header_data) = str::split_first(line, ':');
         // std::cout << header << ":" << header_data << std::endl;
         if (!header.empty())
-            headers_[header] = util::string::trim(header_data);
+            headers_[header] = str::trim(header_data);
     }
 }
 }
