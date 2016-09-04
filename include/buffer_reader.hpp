@@ -35,6 +35,8 @@ public:
         return line;
     }
 
+    ssize_t read_chunk() { return receiver_.receive(string_); }
+
 private:
     void strip_cr(string_view& str)
     {

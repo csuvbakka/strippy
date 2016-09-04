@@ -20,6 +20,7 @@
 #include <http_message.hpp>
 #include <buffer_reader.hpp>
 #include <receive_buffer.hpp>
+#include <http_message_body.hpp>
 
 namespace
 {
@@ -119,22 +120,34 @@ struct ChildThread
     {
         while (1)
         {
-            // using string_buffer = str::character_array;
+            using char_array_buffer = str::character_array;
             using string_buffer = std::string;
-            using receiver = util::socket::Receiver<string_buffer, 1024>;
-            using buffer_reader = str::BufferReader<receiver>;
 
-            string_buffer buffer;
-            buffer_reader reader(client_fd, buffer);
+            using char_array_receiver =
+                util::socket::Receiver<char_array_buffer, 1024>;
+            using string_receiver = util::socket::Receiver<string_buffer, 2048>;
 
-            http::Message<buffer_reader> message(reader);
+            using char_array_buffer_reader =
+                str::BufferReader<char_array_receiver>;
+            using string_buffer_reader = str::BufferReader<string_receiver>;
+
+            using message_type = http::Message<char_array_buffer_reader>;
+            using message_body_type = http::MessageBody<string_buffer_reader>;
+
+            char_array_buffer buffer;
+            char_array_buffer_reader message_reader(client_fd, buffer);
+
+            message_type message(message_reader);
             message.receive();
             if (message)
             {
-                if (buffer.empty())
-                    std::cout << "Buffer empty" << std::endl;
-                else
-                    std::cout << "Left in buffer: " << buffer << std::endl;
+                string_buffer message_body_buffer(buffer.str());
+                string_buffer_reader message_reader(client_fd,
+                                                    message_body_buffer);
+                message_body_type request_body(message, message_reader);
+                request_body.receive();
+                std::cout << request_body.content_length() << std::endl;
+
                 break;
             }
         }
