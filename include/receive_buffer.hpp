@@ -9,16 +9,16 @@ namespace util
 {
 namespace socket
 {
-template <typename _buffer_type_, int receive_buffer_size> class Receiver
+template <typename _string_type_, int receive_buffer_size> class Receiver
 {
 
 public:
-    typedef _buffer_type_ buffer_type;
+    typedef _string_type_ string_type;
     Receiver(int socket_fd)
         : socket_fd_(socket_fd)
     {
     }
-    ssize_t receive(buffer_type& buffer)
+    ssize_t receive(string_type& buffer)
     {
         ssize_t bytes;
         do
@@ -29,7 +29,7 @@ public:
 
         buffer.append(recv_buffer_, bytes);
 
-        std::cout << buffer << std::endl;
+        // std::cout << buffer << std::endl;
 
         return bytes;
     }

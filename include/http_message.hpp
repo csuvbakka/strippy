@@ -48,7 +48,7 @@ private:
             start_line_ = buffer_reader_.readline();
             while (start_line_.starts_with("\r\n"))
                 start_line_.erase_head(2);
-        } while (!start_line_.empty());
+        } while (start_line_.empty());
     }
     void receive_headers()
     {

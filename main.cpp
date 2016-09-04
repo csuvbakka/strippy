@@ -124,11 +124,19 @@ struct ChildThread
             using receiver = util::socket::Receiver<string_buffer, 1024>;
             using buffer_reader = str::BufferReader<receiver>;
 
-            buffer_reader valami(client_fd);
-            http::Message<buffer_reader> message(valami);
+            string_buffer buffer;
+            buffer_reader reader(client_fd, buffer);
+
+            http::Message<buffer_reader> message(reader);
             message.receive();
             if (message)
+            {
+                if (buffer.empty())
+                    std::cout << "Buffer empty" << std::endl;
+                else
+                    std::cout << "Left in buffer: " << buffer << std::endl;
                 break;
+            }
         }
     }
 };

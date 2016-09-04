@@ -7,33 +7,33 @@ namespace str
 {
 template <typename receiver> class BufferReader
 {
-    using buffer_type = typename receiver::buffer_type;
+    using string_type = typename receiver::string_type;
 
 public:
-    using string_view = str::string_view<buffer_type>;
+    using string_view = str::string_view<string_type>;
 
-    BufferReader(int socket_fd)
+    BufferReader(int socket_fd, string_type& string)
         : receiver_(socket_fd)
+        , string_(string)
     {
     }
 
     string_view readline()
     {
-        auto it = std::find(std::begin(buffer_), std::end(buffer_), '\n');
-        while (it == std::end(buffer_))
+        auto it = std::find(std::begin(string_), std::end(string_), '\n');
+        while (it == std::end(string_))
         {
-            receiver_.receive(buffer_);
-            it = std::find(std::begin(buffer_), std::end(buffer_), '\n');
+            receiver_.receive(string_);
+            it = std::find(std::begin(string_), std::end(string_), '\n');
         }
 
-        auto line = string_view(buffer_, std::begin(buffer_), it);
+        auto line = string_view(string_, std::begin(string_), it);
+        std::cout << line << std::endl;
         strip_cr(line);
 
-        str::erase_head_until(buffer_, std::next(it));
+        str::erase_head_until(string_, std::next(it));
         return line;
     }
-
-    string_view buffer() const { return string_view(buffer_); }
 
 private:
     void strip_cr(string_view& str)
@@ -44,7 +44,7 @@ private:
     }
 
 private:
-    buffer_type buffer_;
     receiver receiver_;
+    string_type& string_;
 };
 }

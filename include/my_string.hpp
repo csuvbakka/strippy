@@ -108,6 +108,8 @@ private:
     iterator end_;
 };
 
+std::ostream& operator<<(std::ostream& os, const character_array& str);
+
 template <typename T> const T& empty_buffer()
 {
     static T empty_string_buffer;
@@ -127,7 +129,7 @@ public:
     {
     }
 
-    string_view(string_type& buffer)
+    string_view(const string_type& buffer)
         : string_(buffer)
         , begin_(buffer.begin())
         , end_(buffer.end())
@@ -303,11 +305,11 @@ private:
 };
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const string_view<T>& str);
-
-template <>
-std::ostream& operator<<(std::ostream& os,
-                         const string_view<character_array>& str);
+std::ostream& operator<<(std::ostream& os, const string_view<T>& str)
+{
+    os << str.str();
+    return os;
+}
 
 template <typename T> string_view<T> ltrim_copy(const string_view<T>& str)
 {
