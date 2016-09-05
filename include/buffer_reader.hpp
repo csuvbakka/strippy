@@ -23,7 +23,8 @@ public:
         auto it = std::find(std::begin(string_), std::end(string_), '\n');
         while (it == std::end(string_))
         {
-            receiver_.receive(string_);
+            if (receiver_.receive(string_) == 0)
+                return {};
             it = std::find(std::begin(string_), std::end(string_), '\n');
         }
 

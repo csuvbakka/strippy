@@ -26,8 +26,8 @@ public:
 
     void receive()
     {
-        receive_start_line();
-        receive_headers();
+        if (receive_start_line())
+            receive_headers();
     }
 
     explicit operator bool() const { return parse_state_ == ParseState::DONE; }
@@ -41,14 +41,17 @@ public:
     }
 
 private:
-    void receive_start_line()
+    bool receive_start_line()
     {
         do
         {
             start_line_ = buffer_reader_.readline();
+            if (start_line_.empty())
+                return false;
             while (start_line_.starts_with("\r\n"))
                 start_line_.erase_head(2);
         } while (start_line_.empty());
+        return true;
     }
     void receive_headers()
     {

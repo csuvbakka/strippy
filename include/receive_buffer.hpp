@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <my_string.hpp>
 #include <iostream>
+#include <chrono>
 
 namespace util
 {
@@ -25,6 +26,8 @@ public:
         {
             bytes = ::recv(socket_fd_, recv_buffer_, receive_buffer_size,
                            MSG_DONTWAIT);
+            if (bytes < 0)
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while (bytes < 0);
 
         buffer.append(recv_buffer_, bytes);
