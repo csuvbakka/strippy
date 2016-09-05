@@ -37,6 +37,8 @@ public:
 
     ssize_t read_chunk() { return receiver_.receive(string_); }
 
+    long int buffer_size() const { return string_.size(); }
+
 private:
     void strip_cr(string_view& str)
     {

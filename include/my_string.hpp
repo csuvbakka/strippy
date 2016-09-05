@@ -44,7 +44,8 @@ public:
 
     std::string data() const
     {
-        return std::string(std::begin(buffer_), cend());
+        // return std::string(std::begin(buffer_), cend());
+        return std::string(std::begin(buffer_), cbegin());
     }
 
     bool operator==(const character_array& rhs) const
